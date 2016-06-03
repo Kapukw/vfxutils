@@ -1,0 +1,24 @@
+# Ignore Python files
+*.pyc
+
+# Ignore files build by Visual Studio
+*.obj
+*.pdb
+*.aps
+*.vcxproj.user
+*.vspscc
+*_i.c
+*.i
+*.icf
+*_p.c
+*.ncb
+*.suo
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
+*.sbr
+*.sdf
+*.opensdf
