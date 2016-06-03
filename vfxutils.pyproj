@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{e67a84fd-0009-4360-9160-23d0df8c1dbf}</ProjectGuid>
     <ProjectHome />
-    <StartupFile />
+    <StartupFile>utils\GridMaker.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
