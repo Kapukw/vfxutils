@@ -27,7 +27,7 @@ global proc InitVfxUtils(int $reload)
 
 	$py_cmd =
 		"import sys\n" +
-		"vfxutils_path = r\"C:\\Projects\\vfxutils\\maya\\scripts\\vfxutils\"\n" +
+		"vfxutils_path = \"C:/Projects/vfxutils/maya/scripts/vfxutils\"\n" +
 		"if vfxutils_path not in sys.path: sys.path.append(vfxutils_path)\n";
 	python($py_cmd);
 
