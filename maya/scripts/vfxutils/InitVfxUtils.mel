@@ -1,0 +1,53 @@
+global proc InitVfxUtils(int $reload)
+{
+	if (`filetest -e "C:/Projects/ffx"`)
+	{
+		setProject "C:/Projects/ffx";
+	}
+
+	string $required_plugins[] = {
+		"dx11Shader.mll",
+		"vrayformaya.mll",
+		"FumeFX.mll"
+	};
+
+	for ($plugin in $required_plugins)
+	{
+		if (!`pluginInfo -query -loaded $plugin`)
+		{
+			loadPlugin $plugin;
+		}
+	}
+
+	string $mel_scripts[] = {
+		"vfxutils/CreateVfxUtilsMenu"
+	};
+
+	for ($script in $mel_scripts) eval("source \"" + $script + "\"");
+
+	$py_cmd =
+		"import sys\n" +
+		"vfxutils_path = r\"C:\\Projects\\vfxutils\\maya\\scripts\\vfxutils\"\n" +
+		"if vfxutils_path not in sys.path: sys.path.append(vfxutils_path)\n";
+	python($py_cmd);
+
+	string $python_modules[] = {
+		"AsyncExecution",
+		"GrabTextures",
+		"SceneTweaks",
+		"Utils"
+	};
+
+	for ($module in $python_modules)
+	{
+		python("import " + $module);
+		if ($reload)
+		{
+			if ($module == "SceneTweaks") python("SceneTweaks.unregister_jobs()");
+			python("reload(" + $module + ")");
+		}
+	}
+	python("SceneTweaks.register_jobs()");
+
+	CreateVfxUtilsMenu();
+}
