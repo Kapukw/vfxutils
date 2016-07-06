@@ -23,3 +23,9 @@
 *.sbr
 *.sdf
 *.opensdf
+
+# Ignore some Maya folders
+/maya/projects
+/maya/synColor
+/maya/mayaLog
+/maya/2016/prefs/scriptEditorTemp
