@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "vfxutils", "vfxutils.pyproj", "{E67A84FD-0009-4360-9160-23D0DF8C1DBF}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "vfxutils_maya", "maya\scripts\vfxutils_maya.pyproj", "{F19B35D4-66E6-4018-B54C-1853906BCD1B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +15,8 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{E67A84FD-0009-4360-9160-23D0DF8C1DBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E67A84FD-0009-4360-9160-23D0DF8C1DBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F19B35D4-66E6-4018-B54C-1853906BCD1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F19B35D4-66E6-4018-B54C-1853906BCD1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

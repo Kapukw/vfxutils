@@ -1,60 +1,150 @@
 from PIL import Image, ImageOps, ImageChops
 
-frame_size = (256, 256)
-grid_size = (8, 8)
+def process_ffx(fileMask, gridSize=(8, 8), smoothBorders=False):
 
-out_grid_size = (grid_size[0] * frame_size[0], grid_size[1] * frame_size[1])
+    frameSize = Image.open(fileMask.format(str(0).zfill(4))).size
+    outImgSize = (gridSize[0] * frameSize[0], gridSize[1] * frameSize[1])
 
-out_grid = Image.new('RGBA', out_grid_size)
-out_nm_grid = Image.new('RGBA', out_grid_size)
-background_nm_grid = Image.new('RGB', out_grid_size)
-alpha_mult_grid = Image.new('L', out_grid_size)
+    outImg = Image.new('RGBA', outImgSize)
+    alphaMultImg = Image.new('L', outImgSize)
 
-x = 0
-y = 0
-for frameIdx in xrange(0, grid_size[0] * grid_size[1]):
+    x = 0
+    y = 0
+    for frameIdx in xrange(0, gridSize[0] * gridSize[1]):
 
-    frame = Image.open("C:/Projects/pfx/images/test2.{}.png".format(str(10+frameIdx).zfill(4)))
-    frame.thumbnail(frame_size)
+        frame = Image.open(fileMask.format(str(frameIdx).zfill(4)))
+        frame.thumbnail(frameSize)
 
-    frame_nm = Image.open("C:/Projects/pfx/images/test2.PhoenixFD_normals.{}.png".format(str(10+frameIdx).zfill(4)))
-    frame_nm.thumbnail(frame_size)
+        alphaMultFrame = Image.open("C:/Projects/vfxutils/textures/alpha_mask.tga")
+        alphaMultFrame.thumbnail(frameSize)
 
-    background_nm = Image.open("C:/Projects/vfxutils/textures/background_nm.tga")
-    background_nm.thumbnail(frame_size)
+        location = (x * frameSize[0], y * frameSize[1])
 
-    alpha_mult = Image.open("C:/Projects/vfxutils/textures/alpha_mask.tga")
-    alpha_mult.thumbnail(frame_size)
+        outImg.paste(frame, location)
+        alphaMultImg.paste(alphaMultFrame, location)
 
-    location = (x * frame_size[0], y * frame_size[1])
+        x += 1
+        if x >= gridSize[0]:
+            x = 0
+            y += 1
 
-    out_grid.paste(frame, location)
-    out_nm_grid.paste(frame_nm, location)
-    background_nm_grid.paste(background_nm, location)
-    alpha_mult_grid.paste(alpha_mult, location)
+    if smoothBorders:
+        r, g, b, a = outImg.split()
+        a = ImageChops.multiply(a, alphaMultImg)
+        outImg = Image.merge("RGBA", (r, g, b, a))
 
-    x += 1
-    if x >= grid_size[0]:
-        x = 0
-        y += 1
+    outImg.save(fileMask.format("combined"))
 
-# Invert normal.x 
-r, g, b, a = out_nm_grid.split()
-r = ImageOps.invert(r)
+def process_ffx_loop():
+    frameSize = (256, 256)
+    gridSize = (8, 4)
 
-# Make smooth borders
-a = ImageChops.multiply(a, alpha_mult_grid)
+    totalFrames = gridSize[0] * gridSize[1]
+    offset = 4
 
-# Add smooth backgound to invisible parts for good encoding
-nm_rgb_grid = ImageChops.composite(Image.merge("RGB", (r, g, b)), background_nm_grid, a)
-r, g, b = nm_rgb_grid.split()
-out_nm_grid = Image.merge("RGBA", (r, g, b, a))
+    outImageSize = (gridSize[0] * frameSize[0], gridSize[1] * frameSize[1])
+    outImage = Image.new('RGBA', outImageSize)
+    #alphaMultImage = Image.new('L', outImageSize)
 
-out_nm_grid.save("y:/art/source/particles/textures/special/anim_test2_nm.tga")
+    x = 0
+    y = 0
+    for i in xrange(1, totalFrames + 1):
 
-# Make smooth borders
-r, g, b, a = out_grid.split()
-a = ImageChops.multiply(a, alpha_mult_grid)
-out_grid = Image.merge("RGBA", (r, g, b, a))
+        frameIdx = i + offset
 
-out_grid.save("y:/art/source/particles/textures/special/anim_test2.tga")
+        frame = Image.open("C:/Projects/ffx/images/test2.{}.tga".format(str(frameIdx).zfill(4)))
+        frame.thumbnail(frameSize)
+
+        if i <= offset and False:
+            frameIdx2 = totalFrames + i
+            frame2 = Image.open("C:/Projects/ffx/images/test2.{}.tga".format(str(frameIdx2).zfill(4)))
+            frame2.thumbnail(frameSize)
+
+            _x = i
+            opacity = 0.5 + 0.5 * _x / float(offset + 0.5)
+
+            frame = Image.blend(frame2, frame, opacity)
+
+        elif i >= totalFrames - offset and False:
+            frameIdx2 = offset + 1 - (totalFrames - i)
+            frame2 = Image.open("C:/Projects/ffx/images/test2.{}.tga".format(str(frameIdx2).zfill(4)))
+            frame2.thumbnail(frameSize)
+
+            _x = totalFrames - i
+            opacity = 0.5 * (offset + 0.5 - _x) / float(offset + 0.5)
+
+            frame = Image.blend(frame, frame2, opacity)
+
+        #alphaMult = Image.open("C:/Projects/vfxutils/textures/alpha_mask.tga")
+        #alphaMult.thumbnail(frameSize)
+
+        location = (x * frameSize[0], y * frameSize[1])
+
+        outImage.paste(frame, location)
+        #alphaMultImage.paste(alphaMult, location)
+
+        x += 1
+        if x >= gridSize[0]:
+            x = 0
+            y += 1
+
+    # Make smooth borders
+    #r, g, b, a = outImage.split()
+    #a = ImageChops.multiply(a, alphaMultImage)
+    #outImage = Image.merge("RGBA", (r, g, b, a))
+
+    outImage.save("y:/art/source/particles/textures/special/ffx_loop_test.tga")
+
+def rearrange_frames():
+    srcImg = Image.open("y:/art/source/particles/textures/fire_AAA_5.png")
+    frameSize = (512, 512)
+    gridSize = (8, 8)
+    totalFrames = gridSize[0] * gridSize[1]
+
+    outImageSize = (gridSize[0] * frameSize[0], gridSize[1] * frameSize[1])
+    outImage = Image.new('RGBA', outImageSize)
+
+    x = 0
+    y = 0
+    for i in xrange(0, totalFrames):
+        left = x * frameSize[0]
+        top = y * frameSize[1]
+        right = (x+1) * frameSize[0]
+        bottom = (y+1) * frameSize[1]
+        frame = srcImg.crop((left, top, right, bottom)).rotate(90)
+
+        location = (x * frameSize[0], y * frameSize[1])
+
+        outImage.paste(frame, location)
+
+        x += 1
+        if x >= gridSize[0]:
+            x = 0
+            y += 1
+
+        outImage.save("y:/art/source/particles/textures/fire_AAA_5.tga")
+
+def combine_ffx_normals():
+    nm1 = Image.open("C:/Projects/ffx/images/ffx_nm_forward.combined.tga") # forward
+    nm2 = Image.open("C:/Projects/ffx/images/ffx_nm_inverted.combined.tga") # inverted
+
+    r, g, b, a = nm1.split()
+    nm1 = Image.merge("RGB", (r, g, b))
+    r, g, b, a = nm2.split()
+    nm2 = Image.merge("RGB", (r, g, b))
+
+    gray = Image.new("RGB", nm1.size, (128, 128, 128))
+    white = Image.new("RGB", nm1.size, (255, 255, 255))
+
+    h1 = ImageChops.multiply(nm1, gray)
+    h2 = ImageChops.multiply(ImageChops.subtract(white, nm2), gray)
+    r, g, b = ImageChops.add(h2, h1).split()
+
+    out = Image.merge("RGBA", (r, g, b, a))
+    out.save("C:/Projects/ffx/images/ffx_nm_final.tga")
+
+if __name__ == "__main__":
+    #rearrange_frames()
+    process_ffx("C:/Projects/ffx/images/ffx_nm_forward.{}.tga", (8, 4))
+    process_ffx("C:/Projects/ffx/images/ffx_nm_inverted.{}.tga", (8, 4))
+    combine_ffx_normals()

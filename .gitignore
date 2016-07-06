@@ -2,6 +2,7 @@
 *.pyc
 
 # Ignore files build by Visual Studio
+/.vs
 *.obj
 *.pdb
 *.aps
