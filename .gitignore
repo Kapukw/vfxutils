@@ -24,8 +24,10 @@
 *.sdf
 *.opensdf
 
-# Ignore some Maya folders
+# Ignore some Maya folders and config files
 /maya/projects
 /maya/synColor
 /maya/mayaLog
 /maya/2016/prefs/scriptEditorTemp
+/maya/2016/prefs/MayaInterfaceScalingConfig
+/maya/2016/prefs/renderNodeTypeFavorites

@@ -145,6 +145,7 @@ def combine_ffx_normals():
 
 if __name__ == "__main__":
     #rearrange_frames()
-    process_ffx("C:/Projects/ffx/images/ffx_nm_forward.{}.tga", (8, 4))
-    process_ffx("C:/Projects/ffx/images/ffx_nm_inverted.{}.tga", (8, 4))
-    combine_ffx_normals()
+    #process_ffx("C:/Projects/ffx/images/ffx_nm_forward.{}.tga", (8, 4))
+    #process_ffx("C:/Projects/ffx/images/ffx_nm_inverted.{}.tga", (8, 4))
+    #combine_ffx_normals()
+    process_ffx("C:/Projects/ffx/images/ffx_d.{}.tga", (8, 4))
