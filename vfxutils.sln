@@ -7,6 +7,8 @@ Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "vfxutils", "vfxutils.pyproj
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "vfxutils_maya", "maya\scripts\vfxutils_maya.pyproj", "{F19B35D4-66E6-4018-B54C-1853906BCD1B}"
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "vfxutils_blender", "blender\vfxutils_blender.pyproj", "{A105AF91-E837-4FE9-8945-1CFE5F0936BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,6 +19,8 @@ Global
 		{E67A84FD-0009-4360-9160-23D0DF8C1DBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F19B35D4-66E6-4018-B54C-1853906BCD1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F19B35D4-66E6-4018-B54C-1853906BCD1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A105AF91-E837-4FE9-8945-1CFE5F0936BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A105AF91-E837-4FE9-8945-1CFE5F0936BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
