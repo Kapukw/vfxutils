@@ -4,49 +4,48 @@ import shutil
 import glob
 import maya.cmds as cmds
 
-def get_colladafx_materials(with_shader_name=None):
-    mats = cmds.ls(type="colladafxShader")
-    if with_shader_name != None:
-        mats = [mat for mat in mats if cmds.getAttr(mat + ".vertexProgram") == with_shader_name]
-    return mats
+def get_colladafx_materials():
+    return cmds.ls(type="colladafxShader")
 
-def get_dx11_materials(with_shader_name=None):
-    mats = cmds.ls(type="dx11Shader")
-    if with_shader_name != None:
-        mats = [mat for mat in mats if cmds.getAttr(mat + ".shader") == with_shader_name]
-    return mats
+def get_dx11_materials():
+    return cmds.ls(type="dx11Shader")
 
 def get_meshes():
-    meshes = cmds.ls(long=True, tr=True)
-    if meshes == []: return []
-    meshes = cmds.filterExpand(meshes, fullPath=True, sm=12)
+    transforms = cmds.ls(long=True, tr=True)
+    if transforms == []: return []
+
+    # selectionMask=12, where 12 means 'Polygon'
+    # cmds.filterExpand() -> None, list
+    meshes = cmds.filterExpand(transforms, fullPath=True, selectionMask=12)
     if meshes == None: return []
     return meshes
 
 def get_selected_meshes():
     sel = cmds.ls(sl=True, long=True, tr=True)
-    if sel == []:
-        return []
-    meshes = cmds.filterExpand(sel, fullPath=True, sm=12)
-    if meshes == None:
-        return []
+    if sel == []: return []
+
+    # selectionMask=12, where 12 means 'Polygon'
+    # cmds.filterExpand() -> None, list
+    meshes = cmds.filterExpand(sel, fullPath=True, selectionMask=12)
+    if meshes == None: return []
     return meshes
 
 def get_selected_mesh_transforms():
     sel = cmds.ls(sl=True, long=True, tr=True)
-    if sel == []:
-        return []
-    meshes = cmds.filterExpand(sel, fullPath=True, sm=12)
-    if meshes == None:
-        return []
+    if sel == []: return []
+
+    # selectionMask=12, where 12 means 'Polygon'
+    # cmds.filterExpand() -> None, list
+    meshes = cmds.filterExpand(sel, fullPath=True, selectionMask=12)
+    if meshes == None: return []
+
+    # cmds.listRelatives() -> None, list
     transforms = cmds.listRelatives(meshes, p=True, path=True)
+    if transforms == None: return []
     return transforms
 
 def get_selected_joints():
-    joints = cmds.ls(sl=True, long=True, type="joint")
-    if joints == None:
-        return []
-    return joints
+    return cmds.ls(sl=True, long=True, type="joint")
 
 def get_meshes_polygons(meshes):
     cmds.select(cl=True)
@@ -233,37 +232,41 @@ def remove_dx11_material_duplicates():
 def name_textures_by_filenames():
     file_nodes = cmds.ls(type="file")
     for file_node in file_nodes:
-        filepath = os.path.normpath(cmds.getAttr(file_node + ".fileTextureName"))
+        filepath = os.path.normcase(cmds.getAttr(file_node + ".fileTextureName"))
         filename, ext = os.path.splitext(os.path.basename(filepath))
         cmds.rename(file_node, filename)
 
 def create_tex_by_filepath(filepath):
 
-    filepath = os.path.normpath(filepath)
-
-    filename, ext = os.path.splitext(os.path.basename(filepath))
+    filepath = os.path.normcase(filepath)
 
     file_nodes = cmds.ls(type="file")
     for file_node in file_nodes:
-        if filepath == os.path.normpath(cmds.getAttr(file_node + ".fileTextureName")):
+        if filepath == os.path.normcase(cmds.getAttr(file_node + ".fileTextureName")):
             return file_node
 
     if not os.path.exists(filepath):
-        cmds.warning(">>> File: " + filepath + " is not exist")
+        cmds.warning("File '" + filepath + "' is not exists.")
         return None
 
-    file_node = cmds.shadingNode('file', asTexture=True, name=filename)
+    filename, ext = os.path.splitext(os.path.basename(filepath))
+    file_node = cmds.shadingNode("file", asTexture=True, name=filename)
     cmds.setAttr(file_node + ".fileTextureName", filepath, type="string")
 
     return file_node
 
 def safe_connect_tex(mat, attr, tex):
+    if mat is None or tex is None: return
     if cmds.objExists(mat) and cmds.objExists(tex):
         if cmds.attributeQuery(attr, node=mat, exists=True):
             if tex + ".outColor" != cmds.connectionInfo(mat + "." + attr, sourceFromDestination=True):
                 cmds.connectAttr(tex + ".outColor", mat + "." + attr, force=True)
 
-g_texBindMap = {"_a":"DiffuseSampler", "_n":"NormalSampler", "_g":"SpecularColorSampler", "_m":"MetalnessSampler", "_ao":"OcclusionSampler"}
+g_texBindMap = {"_a"  : "DiffuseSampler",
+                "_n"  : "NormalSampler",
+                "_g"  : "SpecularColorSampler",
+                "_m"  : "MetalnessSampler",
+                "_ao" : "OcclusionSampler"}
 
 def get_tex_base_and_suffix(filepath):
     filename, ext = os.path.splitext(os.path.basename(filepath))
@@ -273,11 +276,10 @@ def get_tex_base_and_suffix(filepath):
     return None
 
 def create_mats_from_folder(folder_path):
-    fx_file = "y:\evil-shaders\object_norm.fx"
+    fx_file = "y:\\evil-shaders\\object_norm.fx"
 
     folder_path = os.path.join(folder_path, "")
     files = glob.glob(folder_path + "*.*")
-    files = map(lambda f: f.lower(), files)
 
     mat_maps = dict()
     for f in files:
