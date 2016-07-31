@@ -97,7 +97,7 @@ TYPE_ABERRATIONS = {
         "list of ints":"[int]",
         "list of strings":"[str]",
         "FCurve or list if index is -1 with an array property":"FCurve",
-        "list of key, value tuples": ("[(str, types.%s)]" % _BPY_STRUCT_FAKE)
+        "list of key, value tuples": ("[(str, types.{})]".format(_BPY_STRUCT_FAKE))
 }
 
 import os
@@ -241,56 +241,56 @@ def rst2list(doc):
             else:
                 definition.setdefault(name,{"name":name, "description":"", "ord":len(definition)})
             last_entry = name
-        elif line.startswith(":type:"): #property type
+        elif line.startswith(":type:"): # property type
             expr = type_name(line)
             if expr: definition["@def"].setdefault("type",expr)
             last_entry = "@def"
-        elif line.startswith(":return:"): #return description
+        elif line.startswith(":return:"): # return description
             expr = line.split(" ",1)
             name = "@returns"
             definition.setdefault(name,{"name": "returns", "description":expr[1], "ord":len(definition)})
             last_entry = name
-        elif line.startswith(":rtype:"): #type, returned by the function
+        elif line.startswith(":rtype:"): # type, returned by the function
             expr = type_name(line)
             if last_entry != "@returns": last_entry = "@def"
             if expr: definition[last_entry].setdefault("type",expr)
-        elif line.startswith(":type"): #argument's type
+        elif line.startswith(":type"): # argument's type
             expr = line.split(" ",2)
             name = expr[1].rstrip(":")
             try:
                 definition[name].setdefault("type",expr[2])
                 last_entry = name
             except:
-                print("Missing argument declaration for '%s'" % name)
-        elif line.startswith(".. note:: "): #note to member description
-            line = line.replace(".. note:: ","")
+                print("Missing argument declaration for '{}'".format(name))
+        elif line.startswith(".. note:: "): # note to member description
+            line = line.replace(".. note:: ", "")
             name = "@note"
-            definition.setdefault(name,{"description":line, "ord":len(definition)})
+            definition.setdefault(name, {"description":line, "ord":len(definition)})
             last_entry = name
-        elif line.startswith(".. seealso::"): #reference to external resource
+        elif line.startswith(".. seealso::"): # reference to external resource
             line = line.replace(".. seealso:: ","")
             name = "@seealso"
             definition.setdefault(name,{"description":line, "ord":len(definition)})
             last_entry = name
         elif line.startswith(".. literalinclude::"):
-            pass #skip this line
-        else: #this is just second line of description for the last entry
+            pass # skip this line
+        else: # this is just second line of description for the last entry
             #  (whole member, or just an single argument)
             if last_entry in definition and line != "" and not line.startswith("Undocumented"):
                 item = definition[last_entry]
                 if "description" not in item:
-                    item.setdefault("description",line)
+                    item.setdefault("description", line)
                 else:
                     item["description"] = item["description"] + line + "\n"
         return last_entry
     #--------------------------------- process_line
     lines = doc.split("\n")
     last_key = "@def"
-    definition = {last_key:{"description":"", "ord":0}} #at the beginning: empty description of function definition
+    definition = {last_key:{"description":"", "ord":0}} # at the beginning: empty description of function definition
 
     for line in lines:
         last_key = process_line(line,definition,last_key)
-    #now let's check the result, stored in <definition> dictionary:
+    # now let's check the result, stored in <definition> dictionary:
     return definition
 
 def rna2list(info):
@@ -524,16 +524,16 @@ def doc2definition(doc,docstring_ident=_IDENT):
 
     _seealso = pop(definition, "@seealso")
 
-    declaration = get(definition, "@def","prototype")
-    decorator = get(definition, "@def", "decorator")
-    hint = get(definition, "@def", "hint")
+    declaration = get(definition, "@def", "prototype")
+    decorator   = get(definition, "@def", "decorator")
+    hint        = get(definition, "@def", "hint")
     if declaration:
         if hint in ("property", "class"):
             pass #no prefix needed
         elif decorator:
-            declaration = decorator + "def " + declaration +":"
+            declaration = decorator + "def " + declaration + ":"
         else:
-            declaration = "def " + declaration +":"
+            declaration = "def " + declaration + ":"
 
     _def = pop(definition, "@def") #remove the definition from the list....
 
@@ -558,18 +558,18 @@ def doc2definition(doc,docstring_ident=_IDENT):
         al("\n")
 
     if _returns:
-            write_indented_lines(ident,al,format_arg(_returns),False)
+        write_indented_lines(ident, al, format_arg(_returns), False)
 
     if _note and "description" in _note:
-        write_indented_lines(ident,al,"Note: " + _note["description"],False)
+        write_indented_lines(ident, al, "Note: " + _note["description"], False)
 
     if _seealso and "description" in _seealso:
-        write_indented_lines(ident,al,"(seealso " + _seealso["description"]+")\n",False)
+        write_indented_lines(ident, al, "(seealso " + _seealso["description"] + ")\n", False)
 
     if not lines:
         lines.append("<not documented>\n")
 
-    result = {"docstring" : docstring_ident + "'''" + "".join(lines)+ docstring_ident  + "'''\n"}
+    result = {"docstring" : docstring_ident + "'''" + "".join(lines) + docstring_ident + "'''\n"}
 
     if declaration:
         result.setdefault("declaration",declaration)
@@ -591,34 +591,33 @@ def pyfunc2predef(ident, fw, identifier, py_func, is_class=True):
     try:
         arguments = inspect.getargspec(py_func)
         if len(arguments.args) == 0 and is_class:
-            fw(ident+"@staticmethod\n")
-        elif len(arguments.args)==0: #global function (is_class = false)
+            fw(ident + "@staticmethod\n")
+        elif len(arguments.args) == 0: # global function (is_class = false)
             pass
         elif arguments.args[0] == "cls" and is_class:
-            fw(ident+"@classmethod\n")
-        else: #global function
+            fw(ident + "@classmethod\n")
+        else: # global function
             pass
 
-        definition = doc2definition(py_func.__doc__) #parse the eventual RST sphinx markup
+        definition = doc2definition(py_func.__doc__) # parse the eventual RST sphinx markup
 
         if "declaration" in definition:
-            write_indented_lines(ident,fw, definition["declaration"],False)
+            write_indented_lines(ident, fw, definition["declaration"], False)
         else:
             arg_str = inspect.formatargspec(*arguments)
-            fmt = ident + "def %s%s:\n"
-            fw(fmt % (identifier, arg_str))
+            fw(ident + "def {}{}:\n".format(identifier, arg_str))
 
         if "docstring" in definition:
-            write_indented_lines(ident,fw,definition["docstring"],False)
+            write_indented_lines(ident, fw, definition["docstring"], False)
 
         if "returns" in definition:
-            write_indented_lines(ident+_IDENT,fw,"return " + definition["returns"],False)
+            write_indented_lines(ident + _IDENT, fw, "return " + definition["returns"], False)
         else:
-            write_indented_lines(ident+_IDENT,fw,"pass",False)
+            write_indented_lines(ident + _IDENT, fw, "pass", False)
 
         fw(ident + "\n")
     except:
-        msg = "#unable to describe the '%s' method due to internal error\n\n" % identifier
+        msg = "# Unable to describe the '{}' method due to internal error\n\n".format(identifier)
         fw(ident + msg)
 
 def py_descr2predef(ident, fw, descr, module_name, type_name, identifier):
@@ -635,20 +634,20 @@ def py_descr2predef(ident, fw, descr, module_name, type_name, identifier):
     if identifier.startswith("_"):
         return
 
-    if type(descr) in (types.GetSetDescriptorType, types.MemberDescriptorType): #an attribute of the module or class
-        definition = doc2definition(descr.__doc__,"") #parse the eventual RST sphinx markup
+    if type(descr) in (types.GetSetDescriptorType, types.MemberDescriptorType): # an attribute of the module or class
+        definition = doc2definition(descr.__doc__,"") # Parse the eventual RST sphinx markup
         if "returns" in definition:
             returns = definition["returns"]
         else:
-            returns = "None"    #we have to assign just something, to be properly parsed!
+            returns = "None" # we have to assign just something, to be properly parsed!
 
         fw(ident + identifier + " = " + returns + "\n")
 
         if "docstring" in definition:
-            write_indented_lines(ident,fw,definition["docstring"],False)
+            write_indented_lines(ident, fw, definition["docstring"], False)
 
     elif type(descr) in (MethodDescriptorType, ClassMethodDescriptorType):
-        py_c_func2predef(ident,fw,module_name,type_name,identifier,descr,True)
+        py_c_func2predef(ident, fw, module_name, type_name, identifier, descr, is_class=True)
     else:
         raise TypeError("type was not MemberDescriptiorType, GetSetDescriptorType, MethodDescriptorType or ClassMethodDescriptorType")
     fw("\n")
@@ -662,22 +661,22 @@ def py_c_func2predef(ident, fw, module_name, type_name, identifier, py_func, is_
         @py_func (<py function>): the method, that is being described here
         @is_class (boolean): True, when it is a class member
     '''
-    definition = doc2definition(py_func.__doc__) #parse the eventual RST sphinx markup
-    if type(py_func)== ClassMethodDescriptorType:
-        fw(ident+"@classmethod\n")
+    definition = doc2definition(py_func.__doc__) # Parse the eventual RST sphinx markup
+    if type(py_func) == ClassMethodDescriptorType:
+        fw(ident + "@classmethod\n")
 
     if "declaration" in definition:
-        write_indented_lines(ident,fw, definition["declaration"],False)
+        write_indented_lines(ident, fw, definition["declaration"], False)
     else:
-        fw(ident + "def %s(*argv):\n" % identifier)#*argv, because we do not know about its arguments....
+        fw(ident + "def {}(*argv):\n".format(identifier)) # Pass *argv, because we do not know about its arguments...
 
     if "docstring" in definition:
-        write_indented_lines(ident,fw,definition["docstring"],False)
+        write_indented_lines(ident, fw, definition["docstring"], False)
 
     if "returns" in definition:
-        write_indented_lines(ident+_IDENT,fw,"return " + definition["returns"],False)
+        write_indented_lines(ident + _IDENT, fw, "return " + definition["returns"], False)
     else:
-        write_indented_lines(ident+_IDENT,fw,"pass",False)
+        write_indented_lines(ident + _IDENT, fw, "pass", False)
 
     fw(ident + "\n")
 
@@ -705,57 +704,56 @@ def pyprop2predef(ident, fw, identifier, py_prop):
 
     fw(ident + "\n")
 
-def pyclass2predef(fw, module_name, type_name, value):
+def pyclass2predef(write_func, module_name, type_name, value):
     ''' Creates declaration of a class
         Details:
-        @fw (function): the unified shortcut to print() or file.write() function
+        @write_func (function): the unified shortcut to print() or file.write() function
         @module_name (string): the name of the module, that contains this class
         @type_name (string): the name of the class
         @value (<class type>): the descriptor of this type
     '''
-    fw("class %s:\n" % type_name)
-    definition = doc2definition(value.__doc__) #parse the eventual RST sphinx markup
+    write_func("class {}:\n".format(type_name))
+    definition = doc2definition(value.__doc__) # Parse the eventual RST sphinx markup
     if "docstring" in definition:
-        write_indented_lines("", fw, definition["docstring"], False)
+        write_indented_lines("", write_func, definition["docstring"], False)
 
     descr_items = [(key, descr) for key, descr in sorted(value.__dict__.items()) if not key.startswith("__")]
 
     for key, descr in descr_items:
         if type(descr) == ClassMethodDescriptorType:
-            py_descr2predef(_IDENT, fw, descr, module_name, type_name, key)
+            py_descr2predef(_IDENT, write_func, descr, module_name, type_name, key)
 
     for key, descr in descr_items:
         if type(descr) == MethodDescriptorType:
-            py_descr2predef(_IDENT, fw, descr, module_name, type_name, key)
+            py_descr2predef(_IDENT, write_func, descr, module_name, type_name, key)
 
     for key, descr in descr_items:
         if type(descr) in {types.FunctionType, types.MethodType}:
-            pyfunc2predef(_IDENT, fw, key, descr)
+            pyfunc2predef(_IDENT, write_func, key, descr)
 
     for key, descr in descr_items:
         if type(descr) == types.GetSetDescriptorType:
-            py_descr2predef(_IDENT, fw, descr, module_name, type_name, key)
+            py_descr2predef(_IDENT, write_func, descr, module_name, type_name, key)
 
     for key, descr in descr_items:
         if type(descr) == PropertyType:
-            pyprop2predef(_IDENT, fw, key, descr)
+            pyprop2predef(_IDENT, write_func, key, descr)
 
-    fw("\n\n")
+    write_func("\n\n")
 
 def pymodule2predef(BASEPATH, module_name, module, title):
     attribute_set = set()
     filepath = os.path.join(BASEPATH, module_name + PYPREDEF_EXT)
 
     file = open(filepath, "w")
-    fw = file.write
-    #fw = print
+    write_func = file.write
 
     #The description of this module:
     if module.__doc__:
         title = title + "\n" + module.__doc__
-    definition = doc2definition(title,"") #skip the leading spaces at the first line...
-    fw(definition["docstring"])
-    fw("\n\n")
+    definition = doc2definition(title, "") # skip the leading spaces at the first line...
+    write_func(definition["docstring"])
+    write_func("\n\n")
 
     # write members of the module
     # only tested with PyStructs which are not exactly modules
@@ -765,7 +763,7 @@ def pymodule2predef(BASEPATH, module_name, module, title):
             continue
         # naughty, we also add getset's into PyStructs, this is not typical py but also not incorrect.
         if type(descr) == types.GetSetDescriptorType :  # 'bpy_app_type' name is only used for examples and messages
-            py_descr2predef("", fw, descr, module_name, "bpy_app_type", key)
+            py_descr2predef("", write_func, descr, module_name, "bpy_app_type", key)
             attribute_set.add(key)
 
     # Then list the attributes:
@@ -774,18 +772,18 @@ def pymodule2predef(BASEPATH, module_name, module, title):
             continue
         # naughty, we also add getset's into PyStructs, this is not typical py but also not incorrect.
         if type(descr) == types.MemberDescriptorType:  # 'bpy_app_type' name is only used for examples and messages
-            py_descr2predef("", fw, descr, module_name, "", key)
+            py_descr2predef("", write_func, descr, module_name, "", key)
             attribute_set.add(key)
 
     del key, descr
 
-    #list classes:
+    # list classes:
     classes = []
 
     for attribute in sorted(dir(module)):
         if not attribute.startswith("_"):
 
-            if attribute in attribute_set: #skip the processed items:
+            if attribute in attribute_set: # skip the processed items:
                 continue
 
             if attribute.startswith("n_"):  # annoying exception, needed for bpy.app
@@ -796,12 +794,12 @@ def pymodule2predef(BASEPATH, module_name, module, title):
             value_type = type(value)
 
             if value_type == types.FunctionType:
-                pyfunc2predef("", fw, attribute, value, is_class=False)
+                pyfunc2predef("", write_func, attribute, value, is_class=False)
 
             elif value_type in (types.BuiltinMethodType, types.BuiltinFunctionType):  # both the same at the moment but to be future proof
                 # note: can't get args from these, so dump the string as is
                 # this means any module used like this must have fully formatted docstrings.
-                py_c_func2predef("", fw, module_name, module, attribute, value, is_class=False)
+                py_c_func2predef("", write_func, module_name, module, attribute, value, is_class=False)
 
             elif value_type == type:
                 classes.append((attribute, value))
@@ -809,7 +807,7 @@ def pymodule2predef(BASEPATH, module_name, module, title):
             elif value_type in (bool, int, float, str, tuple):
                 # constant, not much fun we can do here except to list it.
                 # TODO, figure out some way to document these!
-                fw("{0} = {1} #constant value \n\n".format(attribute,repr(value)))
+                write_func("{} = {} # constant value\n\n".format(attribute, repr(value)))
 
             else:
                 if ENABLE_ECHO: print("\t" + "not documenting {}.{}".format(module_name, attribute))
@@ -820,119 +818,119 @@ def pymodule2predef(BASEPATH, module_name, module, title):
 
     # write collected classes now
     for (type_name, value) in classes:
-        pyclass2predef(fw, module_name, type_name, value)
+        pyclass2predef(write_func, module_name, type_name, value)
 
     file.close()
 
-def rna_property2predef(ident, fw, descr):
+def rna_property2predef(ident, write_func, descr):
     ''' Creates declaration of a property
         Details:
         @ident (string): the required prefix (spaces)
-        @fw (function): the unified shortcut to print() or file.write() function
+        @write_func (function): the unified shortcut to print() or file.write() function
         @descr (rna_info.InfoPropertyRNA): descriptor of the property
     '''
     definition = doc2definition(rna2list(descr),docstring_ident="")
-    write_indented_lines(ident,fw, definition["declaration"],False)
+    write_indented_lines(ident, write_func, definition["declaration"], False)
 
     if "docstring" in definition:
-        write_indented_lines(ident, fw, definition["docstring"], False)
+        write_indented_lines(ident, write_func, definition["docstring"], False)
 
-def rna_function2predef(ident, fw, descr):
+def rna_function2predef(ident, write_func, descr):
     ''' Creates declaration of a function or operator
         Details:
         @ident (string): the required prefix (spaces)
-        @fw (function): the unified shortcut to print() or file.write() function
+        @write_func (function): the unified shortcut to print() or file.write() function
         @descr (rna_info.InfoFunctionRNA or rna_info.InfoOperatorRNA): method's descriptor
     '''
     definition = doc2definition(rna2list(descr))
-    write_indented_lines(ident,fw,definition["declaration"],False) #may contain two lines: decorator and declaration
+    write_indented_lines(ident, write_func, definition["declaration"], False) # may contain two lines: decorator and declaration
 
     if "docstring" in definition:
-        write_indented_lines(ident, fw, definition["docstring"], False)
+        write_indented_lines(ident, write_func, definition["docstring"], False)
 
     if "returns" in definition:
-        write_indented_lines(ident+_IDENT,fw,"return " + definition["returns"],False)
+        write_indented_lines(ident + _IDENT, write_func, "return " + definition["returns"], False)
     else:
-        write_indented_lines(ident+_IDENT,fw,"pass",False)
+        write_indented_lines(ident + _IDENT, write_func, "pass", False)
 
-    fw("\n")
+    write_func("\n")
 
-def rna_struct2predef(ident, fw, descr):
+def rna_struct2predef(ident, write_func, descr):
     ''' Creates declaration of a bpy structure
         Details:
         @ident (string): the required prefix (spaces)
-        @fw (function): the unified shortcut to print() or file.write() function
+        @write_func (function): the unified shortcut to print() or file.write() function
         @descr (rna_info.InfoStructRNA): the descriptor of a Blender Python class
     '''
     if ENABLE_ECHO: print("class {}:\n".format(descr.identifier))
     definition = doc2definition(rna2list(descr))
-    write_indented_lines(ident,fw, definition["declaration"],False)
+    write_indented_lines(ident, write_func, definition["declaration"], False)
 
     if "docstring" in definition:
-        write_indented_lines(ident, fw, definition["docstring"], False)
+        write_indented_lines(ident, write_func, definition["docstring"], False)
 
-    #native properties
+    # native properties
     ident = ident + _IDENT
     properties = descr.properties
-    properties.sort(key= lambda prop: prop.identifier)
+    properties.sort(key=lambda prop: prop.identifier)
     for prop in properties:
-        rna_property2predef(ident,fw,prop)
+        rna_property2predef(ident, write_func, prop)
 
-    #Python properties
+    # Python properties
     properties = descr.get_py_properties()
     for identifier, prop in properties:
-        pyprop2predef(ident,fw,identifier,prop)
+        pyprop2predef(ident, write_func, identifier, prop)
 
-    #Blender native functions
+    # Blender native functions
     functions = descr.functions
     for function in functions:
-        rna_function2predef(ident, fw, function)
+        rna_function2predef(ident, write_func, function)
 
     functions = descr.get_py_functions()
     for identifier, function in functions:
-        pyfunc2predef(ident, fw, identifier, function, is_class = True)
+        pyfunc2predef(ident, write_func, identifier, function, is_class=True)
 
-def ops_struct2predef(ident, fw, module, operators):
-    ''' Creates "pseudostructure" for a given module of operators
+def ops_struct2predef(ident, write_func, module, operators):
+    ''' Creates "pseudo structure" for a given module of operators
         Details:
         @ident (string): the required prefix (spaces)
-        @fw (function): the unified shortcut to print() or file.write() function
+        @write_func (function): the unified shortcut to print() or file.write() function
         @module (string): one of bpy.ops names ("actions", for example)
         @operators (list of rna_info.InfoOperatorRNA): operators, grouped in this module
     '''
-    fmt = ident + "class {0}:\n"
-    fw(fmt.format(module)) #"action" -> "class action:\n"
-    ident = ident+_IDENT
-    fw(ident+"'''Spcecial class, created just to reflect content of bpy.ops.{0}'''\n\n".format(module))
+    write_func(ident + "class {0}:\n".format(module)) # "action" -> "class action:\n"
+    ident = ident + _IDENT
+    write_func(ident + "'''Special class, created just to reflect content of bpy.ops.{0}'''\n\n".format(module))
 
-    operators.sort(key=lambda op: op.func_name)
+    ops = list(operators)
+    ops.sort(key=lambda op: op.func_name)
 
-    for operator in operators:
-        rna_function2predef(ident, fw, operator)
+    for op in ops:
+        rna_function2predef(ident, write_func, op)
 
-def bpy_base2predef(ident, fw):
+def bpy_base2predef(ident, write_func):
     ''' Creates a structure for the Blender base class
         Details:
         @ident (string): the required prefix (spaces)
-        @fw (function): the unified shortcut to print() or file.write() function\n
+        @write_func (function): the unified shortcut to print() or file.write() function
     '''
     fmt = ident + "class {}:\n"
-    fw(fmt.format(_BPY_STRUCT_FAKE))
+    write_func(fmt.format(_BPY_STRUCT_FAKE))
     ident = ident + _IDENT
-    fw(ident + "'''built-in base class for all classes in bpy.types.\n\n")
+    write_func(ident + "'''built-in base class for all classes in bpy.types.\n\n")
     fmt = ident + _IDENT + "Note that bpy.types.{} is not actually available from within blender, it only exists for the purpose of documentation.\n" + ident + "'''\n\n"
-    fw(fmt.format(_BPY_STRUCT_FAKE))
+    write_func(fmt.format(_BPY_STRUCT_FAKE))
 
     descr_items = [(key, descr) for key, descr in sorted(bpy.types.Struct.__bases__[0].__dict__.items()) if not key.startswith("__")]
 
     for key, descr in descr_items:
         if type(descr) == MethodDescriptorType:  # GetSetDescriptorType, GetSetDescriptorType's are not documented yet
-            py_descr2predef(ident, fw, descr, "bpy.types", _BPY_STRUCT_FAKE, key)
+            py_descr2predef(ident, write_func, descr, "bpy.types", _BPY_STRUCT_FAKE, key)
 
     for key, descr in descr_items:
         if type(descr) == types.GetSetDescriptorType:
-            py_descr2predef(ident, fw, descr, "bpy.types", _BPY_STRUCT_FAKE, key)
-    fw("\n\n")
+            py_descr2predef(ident, write_func, descr, "bpy.types", _BPY_STRUCT_FAKE, key)
+    write_func("\n\n")
 
 def bpy2predef(BASEPATH, title):
     ''' Creates the bpy.predef file. It contains the bpy.dta, bpy.ops, bpy.types
@@ -940,11 +938,11 @@ def bpy2predef(BASEPATH, title):
         BASEPATH (string): path for the output file
         title(string): descriptive title (the comment for the whole module)
     '''
-    def property2predef(ident, fw, module, name):
+    def property2predef(ident, write_func, module, name):
         ''' writes definition of a named property
             Details:
             @ident (string): the required prefix (spaces)
-            @fw (function): the unified shortcut to print() or file.write() function
+            @write_func (function): the unified shortcut to print() or file.write() function
             @module (string): one of bpy.ops names ("actions", for example)
             @name (string): name of the property
         '''
@@ -952,45 +950,45 @@ def bpy2predef(BASEPATH, title):
         if value:
             value_type = getattr(value, "rna_type", None)
             if value_type:
-                fw("{0} = types.{1}\n".format(name, value_type.identifier))
+                write_func("{} = types.{}\n".format(name, value_type.identifier))
             else:
-                pyclass2predef(fw, modulr, name, value)
-        fw("\n\n")
+                pyclass2predef(write_func, modulr, name, value)
+        write_func("\n\n")
 
     # read all data:
     structs, funcs, ops, props = rna_info.BuildRNAInfo()
     # open the file:
     filepath = os.path.join(BASEPATH, "bpy" + PYPREDEF_EXT)
     file = open(filepath, "w")
-    fw = file.write
+    write_func = file.write
     # start the file:
     definition = doc2definition(title, "") # skip the leading spaces at the first line
-    fw(definition["docstring"])
-    fw("\n\n")
+    write_func(definition["docstring"])
+    write_func("\n\n")
 
     # Add data members
-    property2predef("", fw, bpy, "context")
-    property2predef("", fw, bpy, "data")
+    property2predef("", write_func, bpy, "context")
+    property2predef("", write_func, bpy, "data")
 
     # Group operators by modules: (dictionary of list of the operators)
     op_modules = {}
     for op in ops.values():
         op_modules.setdefault(op.module_name, []).append(op)
 
-    # Special declaration of non-existing structiure just for the ops member:
-    fw("class ops:\n")
-    fw(_IDENT+"'''Spcecial class, created just to reflect content of bpy.ops'''\n\n")
+    # Special declaration of non-existing structure just for the ops member:
+    write_func("class ops:\n")
+    write_func(_IDENT + "'''Special class, created just to reflect content of bpy.ops'''\n\n")
     for op_module_name, ops_mod in sorted(op_modules.items(),key = lambda m : m[0]):
         if op_module_name == "import":
             continue
-        ops_struct2predef(_IDENT, fw, op_module_name, ops_mod)
+        ops_struct2predef(_IDENT, write_func, op_module_name, ops_mod)
 
     # Classes (Blender structures)
-    fw("class types:\n")
-    fw(_IDENT+"'''A container for all Blender types'''\n" + _IDENT + "\n")
+    write_func("class types:\n")
+    write_func(_IDENT + "'''A container for all Blender types'''\n" + _IDENT + "\n")
 
     # Base structure
-    bpy_base2predef(_IDENT, fw)
+    bpy_base2predef(_IDENT, write_func)
 
     # Sort the type names:
     classes = list(structs.values())
@@ -999,7 +997,7 @@ def bpy2predef(BASEPATH, title):
     for cls in classes:
         # Skip operators
         if "_OT_" not in cls.identifier:
-            rna_struct2predef(_IDENT, fw, cls)
+            rna_struct2predef(_IDENT, write_func, cls)
 
     file.close()
 
@@ -1010,53 +1008,49 @@ def rna2predef(BASEPATH):
 
     if "bpy" in INCLUDED_MODULES:
         bpy2predef(BASEPATH, "Blender API main module")
+    
     # internal modules
-
-    module = None
-
-    #if "bpy.context" not in EXCLUDE_MODULES:
-        # one of a kind, context doc (uses ctypes to extract info!)
-        #pycontext2sphinx(BASEPATH)
+    api_module = None
 
     # python modules
     if "bpy.utils" in INCLUDED_MODULES:
-        from bpy import utils as module
-        pymodule2predef(BASEPATH, "bpy.utils", module, "Utilities (bpy.utils)")
+        from bpy import utils as api_module
+        pymodule2predef(BASEPATH, "bpy.utils", api_module, "Utilities (bpy.utils)")
 
     if "bpy.path" in INCLUDED_MODULES:
-        from bpy import path as module
-        pymodule2predef(BASEPATH, "bpy.path", module, "Path Utilities (bpy.path)")
+        from bpy import path as api_module
+        pymodule2predef(BASEPATH, "bpy.path", api_module, "Path Utilities (bpy.path)")
 
     # C modules
     if "bpy.app" in INCLUDED_MODULES:
-        from bpy import app as module
-        pymodule2predef(BASEPATH, "bpy.app", module, "Application Data (bpy.app)")
+        from bpy import app as api_module
+        pymodule2predef(BASEPATH, "bpy.app", api_module, "Application Data (bpy.app)")
 
     if "bpy.props" in INCLUDED_MODULES:
-        from bpy import props as module
-        pymodule2predef(BASEPATH, "bpy.props", module, "Property Definitions (bpy.props)")
+        from bpy import props as api_module
+        pymodule2predef(BASEPATH, "bpy.props", api_module, "Property Definitions (bpy.props)")
 
     if "mathutils" in INCLUDED_MODULES:
-        import mathutils as module
-        pymodule2predef(BASEPATH, "mathutils", module, "Math Types & Utilities (mathutils)")
+        import mathutils as api_module
+        pymodule2predef(BASEPATH, "mathutils", api_module, "Math Types & Utilities (mathutils)")
 
     if "mathutils.geometry" in INCLUDED_MODULES:
-        import mathutils.geometry as module
-        pymodule2predef(BASEPATH, "mathutils.geometry", module, "Geometry Utilities (mathutils.geometry)")
+        import mathutils.geometry as api_module
+        pymodule2predef(BASEPATH, "mathutils.geometry", api_module, "Geometry Utilities (mathutils.geometry)")
 
     if "blf" in INCLUDED_MODULES:
-        import blf as module
-        pymodule2predef(BASEPATH, "blf", module, "Font Drawing (blf)")
+        import blf as api_module
+        pymodule2predef(BASEPATH, "blf", api_module, "Font Drawing (blf)")
 
     if "bgl" in INCLUDED_MODULES:
-        import bgl as module
-        pymodule2predef(BASEPATH, "bgl", module, "Open GL functions (bgl)")
+        import bgl as api_module
+        pymodule2predef(BASEPATH, "bgl", api_module, "Open GL functions (bgl)")
 
     if "aud" in INCLUDED_MODULES:
-        import aud as module
-        pymodule2predef(BASEPATH, "aud", module, "Audio System (aud)")
+        import aud as api_module
+        pymodule2predef(BASEPATH, "aud", api_module, "Audio System (aud)")
 
-    del module
+    del api_module
 
 def main():
     import bpy

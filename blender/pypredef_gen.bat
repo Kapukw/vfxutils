@@ -3,5 +3,5 @@ rem They are used in PyDev, to use its autocmpletation feature for Blender Pytho
 rem Just run it, to refresh the files in the doc\python_api\pypredef folder
 rem It uses additional folder doc\python_api\pypredef-tmp for internal comparisons
 rem
-..\blender -b -P python_api/pypredef_gen.py
+..\blender -b -P pypredef_gen.py
 pause
