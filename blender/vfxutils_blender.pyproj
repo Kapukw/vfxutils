@@ -11,7 +11,7 @@
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <InterpreterId>{9f7c6923-b774-4c61-8c98-fc8e47bce83f}</InterpreterId>
+    <InterpreterId>{1e133101-3b25-4190-8c59-f0bb69e994cb}</InterpreterId>
     <InterpreterVersion>3.5</InterpreterVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
@@ -39,7 +39,7 @@
     <Compile Include="pypredef_gen.py" />
   </ItemGroup>
   <ItemGroup>
-    <InterpreterReference Include="{9f7c6923-b774-4c61-8c98-fc8e47bce83f}\3.5" />
+    <InterpreterReference Include="{1e133101-3b25-4190-8c59-f0bb69e994cb}\3.5" />
   </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />

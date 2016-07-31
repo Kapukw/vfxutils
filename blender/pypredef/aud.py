@@ -4,49 +4,49 @@
 '''
 
 
-AUD_DEVICE_JACK = 3 #constant value 
+AUD_DEVICE_JACK = 3 # constant value
 
-AUD_DEVICE_NULL = 0 #constant value 
+AUD_DEVICE_NULL = 0 # constant value
 
-AUD_DEVICE_OPENAL = 1 #constant value 
+AUD_DEVICE_OPENAL = 1 # constant value
 
-AUD_DEVICE_SDL = 2 #constant value 
+AUD_DEVICE_SDL = 2 # constant value
 
-AUD_DISTANCE_MODEL_EXPONENT = 5 #constant value 
+AUD_DISTANCE_MODEL_EXPONENT = 5 # constant value
 
-AUD_DISTANCE_MODEL_EXPONENT_CLAMPED = 6 #constant value 
+AUD_DISTANCE_MODEL_EXPONENT_CLAMPED = 6 # constant value
 
-AUD_DISTANCE_MODEL_INVALID = 0 #constant value 
+AUD_DISTANCE_MODEL_INVALID = 0 # constant value
 
-AUD_DISTANCE_MODEL_INVERSE = 1 #constant value 
+AUD_DISTANCE_MODEL_INVERSE = 1 # constant value
 
-AUD_DISTANCE_MODEL_INVERSE_CLAMPED = 2 #constant value 
+AUD_DISTANCE_MODEL_INVERSE_CLAMPED = 2 # constant value
 
-AUD_DISTANCE_MODEL_LINEAR = 3 #constant value 
+AUD_DISTANCE_MODEL_LINEAR = 3 # constant value
 
-AUD_DISTANCE_MODEL_LINEAR_CLAMPED = 4 #constant value 
+AUD_DISTANCE_MODEL_LINEAR_CLAMPED = 4 # constant value
 
-AUD_FORMAT_FLOAT32 = 36 #constant value 
+AUD_FORMAT_FLOAT32 = 36 # constant value
 
-AUD_FORMAT_FLOAT64 = 40 #constant value 
+AUD_FORMAT_FLOAT64 = 40 # constant value
 
-AUD_FORMAT_INVALID = 0 #constant value 
+AUD_FORMAT_INVALID = 0 # constant value
 
-AUD_FORMAT_S16 = 18 #constant value 
+AUD_FORMAT_S16 = 18 # constant value
 
-AUD_FORMAT_S24 = 19 #constant value 
+AUD_FORMAT_S24 = 19 # constant value
 
-AUD_FORMAT_S32 = 20 #constant value 
+AUD_FORMAT_S32 = 20 # constant value
 
-AUD_FORMAT_U8 = 1 #constant value 
+AUD_FORMAT_U8 = 1 # constant value
 
-AUD_STATUS_INVALID = 0 #constant value 
+AUD_STATUS_INVALID = 0 # constant value
 
-AUD_STATUS_PAUSED = 2 #constant value 
+AUD_STATUS_PAUSED = 2 # constant value
 
-AUD_STATUS_PLAYING = 1 #constant value 
+AUD_STATUS_PLAYING = 1 # constant value
 
-AUD_STATUS_STOPPED = 3 #constant value 
+AUD_STATUS_STOPPED = 3 # constant value
 
 def device(*argv):
     '''device()

@@ -4,15 +4,15 @@
 '''
 
 
-CLIPPING = 2 # constant value 
+CLIPPING = 2 # constant value
 
-KERNING_DEFAULT = 8 # constant value 
+KERNING_DEFAULT = 8 # constant value
 
-ROTATION = 1 # constant value 
+ROTATION = 1 # constant value
 
-SHADOW = 4 # constant value 
+SHADOW = 4 # constant value
 
-WORD_WRAP = 128 # constant value 
+WORD_WRAP = 128 # constant value
 
 def aspect(fontid, aspect):
     '''Set the aspect for drawing text.
