@@ -299,3 +299,9 @@ def create_mats_from_folder(folder_path):
 
         for suffix, f in masks:
             safe_connect_tex(mat, g_texBindMap[suffix], create_tex_by_filepath(f))
+
+
+def maya_print(s):
+    if not s.endswith("\n"):
+        s += "\n"
+    sys.stdout.write(s)
