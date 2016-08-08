@@ -6,9 +6,6 @@ global proc CreateVfxUtilsMenu()
 	if (`menu -exists _VfxUtilsMenu`) deleteUI -menu _VfxUtilsMenu;
 	menu -label "VFX Utils" -tearOff true _VfxUtilsMenu;
 
-	menuItem -label "Reload VFX Utils"
-		-annotation ""
-		-command "source \"vfxutils/InitVfxUtils\"; InitVfxUtils(1);";
 	menuItem -label "Scene Tweaks"
 		-annotation ""
 		-command "python \"SceneTweaks.scene_tweaks_window()\"";
