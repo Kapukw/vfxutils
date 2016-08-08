@@ -10,9 +10,8 @@ g_jobsPool = list()
 
 def register_jobs():
     global g_jobsPool
-    #g_jobsPool.append(cmds.scriptJob(event=["SceneOpened", "SceneTweaks.clean_scene()"], protected=True))
+    #g_jobsPool.append(cmds.scriptJob(event=["SceneOpened", "import maya.cmds as cmds\ncmds.evalDeferred(\"SceneTweaks.remove_unknown_nodes()\")"],  protected=True))
     sys.stdout.write("SceneTweaks: {} jobs registered\n".format(len(g_jobsPool)))
-    #clean_scene()
 
 def unregister_jobs():
     global g_jobsPool
@@ -21,21 +20,32 @@ def unregister_jobs():
     sys.stdout.write("SceneTweaks: {} jobs unregistered\n".format(len(g_jobsPool)))
     g_jobsPool = list()
 
-def clean_scene():
+def remove_unknown_nodes():
+    removed_count = 0
+
     unknown_nodes = cmds.ls(type="unknown")
-    sys.stdout.write("Delete " + str(len(unknown_nodes)) + " nodes of type 'unknown'.\n")
     for node in unknown_nodes:
         if cmds.objExists(node):
+            sys.stdout.write("Remove unknown node '{}'.\n".format(node))
             cmds.lockNode(node, lock=False)
             cmds.delete(node)
+            removed_count += 1
 
     if cmds.pluginInfo("Turtle.mll", q=True, loaded=True):
+        cmds.pluginInfo("Turtle.mll", e=True, autoload=False)
         cmds.unloadPlugin("Turtle.mll", force=True)
-    locked_nodes = ["TurtleDefaultBakeLayer", "ilrOptionsNode", "ilrUIOptionsNode", "ilrBakeLayerManager"]
-    for node in locked_nodes:
+    turtle_nodes = ["TurtleDefaultBakeLayer",
+                    "TurtleBakeLayerManager",
+                    "TurtleRenderOptions",
+                    "TurtleUIOptions"]
+    for node in turtle_nodes:
         if cmds.objExists(node):
+            sys.stdout.write("Remove Turtle node '{}'.\n".format(node))
             cmds.lockNode(node, lock=False)
             cmds.delete(node)
+            removed_count += 1
+
+    sys.stdout.write(str(removed_count) + " unknown nodes removed.\n")
 
 g_nmLightsGroupName = "ffx_nm_lights"
 
@@ -84,12 +94,6 @@ def render_nm_animation():
     cmds.setAttr("vraySettings.animType", 1)
     mel.eval("renderIntoNewWindow render;")
 
-g_ffxShadowFalloff      = "g_ffxShadowFalloff"
-g_lightsIntencity       = "g_lightsIntencity"
-g_invertLightsDirection = "g_invertLightDirection"
-g_animStartFrame        = "g_animStartFrame"
-g_animEndFrame          = "g_animEndFrame"
-
 def get_input_values():
     value = cmds.getAttr("fumeFXShape1.sh_shadow_falloff")
     cmds.floatSliderGrp(g_ffxShadowFalloff, e=True, v=value)
@@ -135,93 +139,62 @@ def register_window_jobs():
     cmds.scriptJob(attributeChange=['directionalLightZShape.intensity', "SceneTweaks.get_input_values()"], parent=g_window)
     get_input_values()
 
-def scene_tweaks_tab():
+g_window                = "SceneTweaks_Window"
 
-    tab = cmds.columnLayout(adjustableColumn=True, w=450, h=500)
-
-    cmds.frameLayout(label="Scene Tweaks", mw=5, mh=5)
-
-    cmds.floatSliderGrp(g_ffxShadowFalloff, l="FFX: Smoke Shadow Falloff", f=True, min=0.0, max=50.0, fmn=0.0, fmx=50.0, v=1.0, cc="SceneTweaks.set_input_values()")
-    cmds.floatSliderGrp(g_lightsIntencity,  l="Lights Intencity",          f=True, min=0.0, max=20.0, fmn=0.0, fmx=20.0, v=1.0, cc="SceneTweaks.set_input_values()")
-    
-    cmds.checkBox(g_invertLightsDirection,  l="Invert Lights Direction", v=False, cc="SceneTweaks.set_nm_lights_direction()")
-
-    cmds.rowLayout(numberOfColumns=2)
-    cmds.floatField(g_animStartFrame, v=cmds.getAttr("defaultRenderGlobals.startFrame"))
-    cmds.floatField(g_animEndFrame, v=cmds.getAttr("defaultRenderGlobals.endFrame"))
-    cmds.setParent("..")
-
-    register_window_jobs()
-
-    #cmds.button(label="Delete Unknown Nodes",           command="SceneTweaks.clean_scene()")
-    #cmds.button(label="Create FumeFX normal map rig",   command="SceneTweaks.create_ffx_nm_rig()")
-    cmds.button(label="Render frame",                   command="SceneTweaks.render_frame()")
-    cmds.button(label="Render animation",               command="SceneTweaks.render_animation()")
-    cmds.button(label="Render normal map frame",        command="SceneTweaks.render_nm_frame()")
-    cmds.button(label="Render normal map animation",    command="SceneTweaks.render_nm_animation()")
-
-    cmds.setParent("..")
-
-    cmds.setParent("..")
-
-    return tab
-
-
-g_window = "SceneTweaks_Window"
+g_ffxShadowFalloff      = "g_ffxShadowFalloff"
+g_lightsIntencity       = "g_lightsIntencity"
+g_invertLightsDirection = "g_invertLightDirection"
+g_animCurrentFrame      = "g_animCurrentFrame"
+g_animStartFrame        = "g_animStartFrame"
+g_animEndFrame          = "g_animEndFrame"
 
 def scene_tweaks_window():
-    if cmds.window(g_window, exists=True): cmds.deleteUI(g_window, window=True)
-    window = cmds.window(g_window, sizeable=False, title="Scene Tweaks")
-
-    tabs = cmds.tabLayout(childResizable=False, scrollable=False, innerMarginWidth=5, innerMarginHeight=5)
-    cmds.tabLayout(tabs, edit=True, tabLabel=((scene_tweaks_tab(), "Material Tweaks")))
-    cmds.setParent("..")
-
-    cmds.showWindow(window)
-
-def scene_tweaks_window_new():
     if cmds.window(g_window, exists=True): cmds.deleteUI(g_window, window=True)
     window = cmds.window(g_window, sizeable=True, resizeToFitChildren=True, title="Scene Tweaks")
     cmds.columnLayout(adjustableColumn=True)
 
-    cmds.frameLayout(label="Env Settings", mw=5, mh=5)
-
-    rl = cmds.rowLayout(numberOfColumns=2, adjustableColumn=2)
-    cmds.columnLayout(adjustableColumn=True)
-    cmds.textFieldGrp(g_brdfPath_textFieldGrp,          label="BRDF Texture",           text="", cc="SceneTweaks.set_env_tex('BrdfSampler')")
-    cmds.textFieldGrp(g_diffuseEnvPath_textFieldGrp,    label="Diffuse Env Cubemap",    text="", cc="SceneTweaks.set_env_tex('DiffuseLightingSampler')")
-    cmds.textFieldGrp(g_specularEnvPath_textFieldGrp,   label="Specular Env Cubemap",   text="", cc="SceneTweaks.set_env_tex('SpecularLightingSampler')")
-    cmds.setParent("..")
-    cmds.columnLayout(adjustableColumn=False)
-    cmds.iconTextButton(style="iconOnly", image1="fileOpen.png", command="SceneTweaks.set_env_tex('BrdfSampler', file_dialog=True)")
-    cmds.iconTextButton(style="iconOnly", image1="fileOpen.png", command="SceneTweaks.set_env_tex('DiffuseLightingSampler', file_dialog=True)")
-    cmds.iconTextButton(style="iconOnly", image1="fileOpen.png", command="SceneTweaks.set_env_tex('SpecularLightingSampler', file_dialog=True)")
-    cmds.setParent("..")
-    cmds.rowLayout(rl, e=True, columnAttach=[(1, "right", 0), (2, "both", 0)])
-    cmds.setParent("..")
-
-    cmds.columnLayout(adjustableColumn=False)
-    cmds.optionMenu(g_techniqueList_optionMenu, label="Technique", cc="SceneTweaks.set_technique();")
-    for technique in g_techniques: cmds.menuItem(label=technique)
-    cmds.checkBox(g_toggleLocalAo_checkBox, label="Use Local AO", cc="SceneTweaks.toggle_local_ao()")
-    cmds.setParent("..")
+    cmds.frameLayout(label="Fume FX Tweaks", mw=5, mh=5)
 
     cmds.columnLayout(adjustableColumn=True)
-    cmds.button(label="Set Default Env Textures", command="SceneTweaks.set_default_env_textures()")
-    cmds.button(label="Reload All Dx11 Shaders", command="SceneTweaks.reload_all_dx11_shaders()")
+    cmds.floatSliderGrp(g_ffxShadowFalloff, l="FFX Smoke Shadow Falloff", f=True, min=0.0, max=50.0, fmn=0.0, fmx=50.0, v=1.0, cc="SceneTweaks.set_input_values()")
+    cmds.floatSliderGrp(g_lightsIntencity,  l="Lights Intencity",          f=True, min=0.0, max=20.0, fmn=0.0, fmx=20.0, v=1.0, cc="SceneTweaks.set_input_values()")
+    cmds.checkBox(g_invertLightsDirection,  l="Invert Lights Direction", v=False, cc="SceneTweaks.set_nm_lights_direction()")
     cmds.setParent("..")
 
-    cmds.setParent("..")
+    register_window_jobs()
 
-    cmds.frameLayout(label="Scene Tweaks", mw=5, mh=5)
-
+    cmds.rowLayout(numberOfColumns=2)
     cmds.columnLayout(adjustableColumn=True)
-    cmds.button(label="Remove Unknown Nodes", command="SceneTweaks.remove_unknown_nodes()")
-    cmds.button(label="Remove Texture/Material Duplicates", command="SceneTweaks.remove_duplicates()")
-    cmds.button(label="Fix Semantic Values", command="SceneTweaks.fix_semantic_values()")
-    cmds.button(label="Fix UV Set Names", command="SceneTweaks.fix_uvset_names()")
+    cmds.rowLayout(numberOfColumns=2)
+    cmds.text(l="Current frame"); cmds.floatField(g_animCurrentFrame, editable=False, precision=1)
+    cmds.setParent("..")
+    cmds.button(label="Render frame (diffuse)",         command="SceneTweaks.render_frame()")
+    cmds.button(label="Render frame (normal map)",      command="SceneTweaks.render_nm_frame()")
+    cmds.setParent("..")
+    cmds.columnLayout(adjustableColumn=True)
+    cmds.rowLayout(numberOfColumns=4)
+    cmds.text(l="Start");         cmds.floatField(g_animStartFrame,   editable=True,  precision=1, v=cmds.getAttr("defaultRenderGlobals.startFrame"))
+    cmds.text(l="End");           cmds.floatField(g_animEndFrame,     editable=True,  precision=1, v=cmds.getAttr("defaultRenderGlobals.endFrame"))
+    cmds.setParent("..")
+    cmds.button(label="Render animation (diffuse)",     command="SceneTweaks.render_animation()")
+    cmds.button(label="Render animation (normal map)",  command="SceneTweaks.render_nm_animation()")
+    cmds.setParent("..")
     cmds.setParent("..")
 
+    cmds.setParent("..")
+
+    cmds.frameLayout(label="Vray Tweaks", mw=5, mh=5)
+    cmds.rowLayout(numberOfColumns=2)
+    cmds.button(label="Default Setup")
+    cmds.button(label="Fume FX Setup")
+    cmds.setParent("..")
+    cmds.setParent("..")
+
+    cmds.frameLayout(label="Image Processing", mw=5, mh=5)
+    cmds.columnLayout(adjustableColumn=True)
+    cmds.button(label="Make sprite sheet (diffuse)")
+    cmds.button(label="Make sprite sheet (normal map)")
+    cmds.setParent("..")
     cmds.setParent("..")
 
     cmds.setParent("..")

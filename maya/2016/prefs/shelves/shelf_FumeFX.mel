@@ -397,6 +397,36 @@ global proc shelf_FumeFX () {
     shelfButton
         -enableCommandRepeat 1
         -enable 1
+        -width 39
+        -height 39
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Scene Tweaks" 
+        -enableBackground 0
+        -align "center" 
+        -label "Scene Tweaks" 
+        -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "scene_tweaks.png" 
+        -image1 "scene_tweaks.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "SceneTweaks.scene_tweaks_window()" 
+        -sourceType "python" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
         -width 23
         -height 23
         -manage 1
