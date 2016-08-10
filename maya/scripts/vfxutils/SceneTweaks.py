@@ -47,16 +47,6 @@ def remove_unknown_nodes():
 
     sys.stdout.write(str(removed_count) + " unknown nodes removed.\n")
 
-g_nmLightsGroupName = "ffx_nm_lights"
-
-def create_ffx_nm_rig():
-    if cmds.objExists(g_nmLightsGroupName):
-        cmds.delete(g_nmLightsGroupName)
-    light_x = cmds.directionalLight(rgb=[1, 0, 0], rotation=(0, 90, 0),  name="directionalLightX")
-    light_y = cmds.directionalLight(rgb=[0, 1, 0], rotation=(-90, 0, 0), name="directionalLightY")
-    light_z = cmds.directionalLight(rgb=[0, 0, 1], rotation=(0, 0, 0),   name="directionalLightZ")
-    cmds.group(light_x, light_y, light_z, name=g_nmLightsGroupName)
-
 def render_frame():
     if not cmds.objExists("vraySettings"):
         Utils.maya_print("Object 'vraySettings' is not exists. Skip rendering.")
@@ -76,17 +66,15 @@ def render_nm_frame():
     if not cmds.objExists("vraySettings"):
         Utils.maya_print("Object 'vraySettings' is not exists. Skip rendering.")
         return
+    set_nm_lights_rotation()
     cmds.setAttr("vraySettings.animType", 0)
-    if cmds.objExists(g_nmLightsGroupName):
-        cmds.setAttr(g_nmLightsGroupName + ".rotateX", cmds.getAttr("persp.rotateX"))
-        cmds.setAttr(g_nmLightsGroupName + ".rotateY", cmds.getAttr("persp.rotateY"))
-        cmds.setAttr(g_nmLightsGroupName + ".rotateZ", cmds.getAttr("persp.rotateZ"))
     mel.eval("renderIntoNewWindow render;")
 
 def render_nm_animation():
     if not cmds.objExists("vraySettings"):
         Utils.maya_print("Object 'vraySettings' is not exists. Skip rendering.")
         return
+    set_nm_lights_rotation()
     text = "ffx_nm_forward"
     if cmds.checkBox(g_invertLightsDirection, q=True, v=True):
         text = "ffx_nm_inverted"
@@ -99,7 +87,6 @@ def sync_nm_lights(light_dir):
     Utils.set_attr_if_new("directionalLightXShape.intensity", value)
     Utils.set_attr_if_new("directionalLightYShape.intensity", value)
     Utils.set_attr_if_new("directionalLightZShape.intensity", value)
-    update_ui()
 
 g_skipUiUpdate = False
 
@@ -139,18 +126,28 @@ def set_nm_lights_direction():
     cmds.setAttr("directionalLightY.rotateX", -90 * mult)
     cmds.setAttr("directionalLightZ.rotateX", 90 - 90 * mult)
 
-def register_window_jobs():
-    create_ffx_nm_rig()
+def set_nm_lights_rotation():
+    cmds.setAttr(g_nmLightsGroupName + ".rotateX", cmds.getAttr("persp.rotateX"))
+    cmds.setAttr(g_nmLightsGroupName + ".rotateY", cmds.getAttr("persp.rotateY"))
+    cmds.setAttr(g_nmLightsGroupName + ".rotateZ", cmds.getAttr("persp.rotateZ"))
+
+def setup_objects():
+    if cmds.objExists(g_nmLightsGroupName):
+        cmds.delete(g_nmLightsGroupName)
+    light_x = cmds.directionalLight(rgb=[1, 0, 0], rotation=(0, 90, 0),  name="directionalLightX")
+    light_y = cmds.directionalLight(rgb=[0, 1, 0], rotation=(-90, 0, 0), name="directionalLightY")
+    light_z = cmds.directionalLight(rgb=[0, 0, 1], rotation=(0, 0, 0),   name="directionalLightZ")
+    cmds.group(light_x, light_y, light_z, name=g_nmLightsGroupName)
+
     required_objs = ["defaultRenderGlobals", "fumeFXShape1", "directionalLightX", "directionalLightY", "directionalLightZ"]
     for obj in required_objs:
         if not cmds.objExists(obj):
             cmds.warning("Object '{}' is not exists.".format(obj))
             return
 
-    cmds.scriptJob(attributeChange=['directionalLightXShape.intensity', "SceneTweaks.sync_nm_lights('X')"], parent=g_window)
-    cmds.scriptJob(attributeChange=['directionalLightYShape.intensity', "SceneTweaks.sync_nm_lights('Y')"], parent=g_window)
-    cmds.scriptJob(attributeChange=['directionalLightZShape.intensity', "SceneTweaks.sync_nm_lights('Z')"], parent=g_window)
-
+    cmds.scriptJob(attributeChange=['directionalLightXShape.intensity', "SceneTweaks.sync_nm_lights('X')\nSceneTweaks.update_ui()"], parent=g_window)
+    cmds.scriptJob(attributeChange=['directionalLightYShape.intensity', "SceneTweaks.sync_nm_lights('Y')\nSceneTweaks.update_ui()"], parent=g_window)
+    cmds.scriptJob(attributeChange=['directionalLightZShape.intensity', "SceneTweaks.sync_nm_lights('Z')\nSceneTweaks.update_ui()"], parent=g_window)
     cmds.scriptJob(attributeChange=['fumeFXShape1.sh_shadow_falloff',   "SceneTweaks.update_ui()"], parent=g_window)
     cmds.scriptJob(          event=["timeChanged",                      "SceneTweaks.update_ui()"], parent=g_window)
     cmds.scriptJob(attributeChange=['defaultRenderGlobals.startFrame',  "SceneTweaks.update_ui()"], parent=g_window)
@@ -158,8 +155,9 @@ def register_window_jobs():
 
     update_ui()
 
-g_window                = "SceneTweaks_Window"
+g_nmLightsGroupName     = "ffx_nm_lights"
 
+g_window                = "SceneTweaks_Window"
 g_ffxShadowFalloff      = "g_ffxShadowFalloff"
 g_lightsIntencity       = "g_lightsIntencity"
 g_invertLightsDirection = "g_invertLightDirection"
@@ -214,7 +212,7 @@ def scene_tweaks_window():
     cmds.setParent("..")
     cmds.setParent("..")
 
-    register_window_jobs()
+    setup_objects()
 
     cmds.setParent("..")
     cmds.showWindow(window)
