@@ -106,20 +106,29 @@ g_skipUiUpdate = False
 def update_ui():
     if g_skipUiUpdate:
         return
-    value = cmds.getAttr("fumeFXShape1.sh_shadow_falloff")
-    cmds.floatSliderGrp(g_ffxShadowFalloff, e=True, v=value)
-    value = cmds.getAttr("directionalLightXShape.intensity")
-    cmds.floatSliderGrp(g_lightsIntencity, e=True, v=value)
+    value = cmds.getAttr("fumeFXShape1.sh_shadow_falloff");     cmds.floatSliderGrp(g_ffxShadowFalloff, e=True, v=value)
+    value = cmds.getAttr("directionalLightXShape.intensity");   cmds.floatSliderGrp(g_lightsIntencity,  e=True, v=value)
+    value = cmds.currentTime(query=True);                       cmds.floatField(g_animCurrentFrame,     e=True, v=value)
+    value = cmds.getAttr("defaultRenderGlobals.startFrame");    cmds.floatField(g_animStartFrame,       e=True, v=value)
+    value = cmds.getAttr("defaultRenderGlobals.endFrame");      cmds.floatField(g_animEndFrame,         e=True, v=value)
 
 def set_attrs():
     global g_skipUiUpdate
     g_skipUiUpdate = True
+    
     value = cmds.floatSliderGrp(g_ffxShadowFalloff, q=True, v=True)
     Utils.set_attr_if_new("fumeFXShape1.sh_shadow_falloff", value)
+    
     value = cmds.floatSliderGrp(g_lightsIntencity, q=True, v=True)
     Utils.set_attr_if_new("directionalLightXShape.intensity", value)
     Utils.set_attr_if_new("directionalLightYShape.intensity", value)
     Utils.set_attr_if_new("directionalLightZShape.intensity", value)
+
+    value = cmds.floatField(g_animStartFrame, q=True, v=True)
+    Utils.set_attr_if_new("defaultRenderGlobals.startFrame", value)
+    value = cmds.floatField(g_animEndFrame, q=True, v=True)
+    Utils.set_attr_if_new("defaultRenderGlobals.endFrame", value)
+
     g_skipUiUpdate = False
 
 def set_nm_lights_direction():
@@ -132,16 +141,21 @@ def set_nm_lights_direction():
 
 def register_window_jobs():
     create_ffx_nm_rig()
-    required_objs = ["fumeFXShape1", "directionalLightX", "directionalLightY", "directionalLightZ"]
+    required_objs = ["defaultRenderGlobals", "fumeFXShape1", "directionalLightX", "directionalLightY", "directionalLightZ"]
     for obj in required_objs:
         if not cmds.objExists(obj):
             cmds.warning("Object '{}' is not exists.".format(obj))
             return
 
-    cmds.scriptJob(attributeChange=['fumeFXShape1.sh_shadow_falloff',   "SceneTweaks.update_ui()"], parent=g_window)
     cmds.scriptJob(attributeChange=['directionalLightXShape.intensity', "SceneTweaks.sync_nm_lights('X')"], parent=g_window)
     cmds.scriptJob(attributeChange=['directionalLightYShape.intensity', "SceneTweaks.sync_nm_lights('Y')"], parent=g_window)
     cmds.scriptJob(attributeChange=['directionalLightZShape.intensity', "SceneTweaks.sync_nm_lights('Z')"], parent=g_window)
+
+    cmds.scriptJob(attributeChange=['fumeFXShape1.sh_shadow_falloff',   "SceneTweaks.update_ui()"], parent=g_window)
+    cmds.scriptJob(          event=["timeChanged",                      "SceneTweaks.update_ui()"], parent=g_window)
+    cmds.scriptJob(attributeChange=['defaultRenderGlobals.startFrame',  "SceneTweaks.update_ui()"], parent=g_window)
+    cmds.scriptJob(attributeChange=['defaultRenderGlobals.endFrame',    "SceneTweaks.update_ui()"], parent=g_window)
+
     update_ui()
 
 g_window                = "SceneTweaks_Window"
@@ -166,8 +180,6 @@ def scene_tweaks_window():
     cmds.checkBox(g_invertLightsDirection,  l="Invert Lights Direction", v=False, cc="SceneTweaks.set_nm_lights_direction()")
     cmds.setParent("..")
 
-    register_window_jobs()
-
     cmds.rowLayout(numberOfColumns=2)
     cmds.columnLayout(adjustableColumn=True)
     cmds.rowLayout(numberOfColumns=2)
@@ -178,8 +190,8 @@ def scene_tweaks_window():
     cmds.setParent("..")
     cmds.columnLayout(adjustableColumn=True)
     cmds.rowLayout(numberOfColumns=4)
-    cmds.text(l="Start");         cmds.floatField(g_animStartFrame,   editable=True,  pre=1, v=cmds.getAttr("defaultRenderGlobals.startFrame"))
-    cmds.text(l="End");           cmds.floatField(g_animEndFrame,     editable=True,  pre=1, v=cmds.getAttr("defaultRenderGlobals.endFrame"))
+    cmds.text(l="Start");         cmds.floatField(g_animStartFrame,   editable=True,  pre=1, v=0.0, cc="SceneTweaks.set_attrs()")
+    cmds.text(l="End");           cmds.floatField(g_animEndFrame,     editable=True,  pre=1, v=1.0, cc="SceneTweaks.set_attrs()")
     cmds.setParent("..")
     cmds.button(label="Render animation (diffuse)",     command="SceneTweaks.render_animation()")
     cmds.button(label="Render animation (normal map)",  command="SceneTweaks.render_nm_animation()")
@@ -201,6 +213,8 @@ def scene_tweaks_window():
     cmds.button(label="Make sprite sheet (normal map)")
     cmds.setParent("..")
     cmds.setParent("..")
+
+    register_window_jobs()
 
     cmds.setParent("..")
     cmds.showWindow(window)
