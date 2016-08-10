@@ -305,3 +305,7 @@ def maya_print(s):
     if not s.endswith("\n"):
         s += "\n"
     sys.stdout.write(s)
+
+def set_attr_if_new(attr, value):
+    if value != cmds.getAttr(attr):
+        cmds.setAttr(attr, value)
