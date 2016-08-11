@@ -218,12 +218,22 @@ def scene_tweaks_window():
     cmds.showWindow(window)
 
 def vray_default_setup():
+    mel.eval("setCurrentRenderer \"vray\";")
+    if not cmds.objExists("vraySettings"):
+        Utils.maya_print("Node 'vraySettings' must be initialized. Open render settings.")
+        mel.eval("unifiedRenderGlobalsWindow;")
+
     presets = cmds.nodePreset(list="vraySettings")
     if "Vray_Default" in presets:
         cmds.nodePreset(load=("vraySettings", "Vray_Default"))
+        Utils.maya_print("Vray now using default setup.")
 
 def vray_fumefx_setup():
     mel.eval("setCurrentRenderer \"vray\";")
+    if not cmds.objExists("vraySettings"):
+        Utils.maya_print("Node 'vraySettings' must be initialized. Open render settings.")
+        mel.eval("unifiedRenderGlobalsWindow;")
+
     # VRay Common
     cmds.setAttr("vraySettings.imageFormatStr", "tga", type="string")
     cmds.setAttr("vraySettings.fileNamePadding", 4)
@@ -243,3 +253,5 @@ def vray_fumefx_setup():
     cmds.setAttr("vraySettings.aaFilterOn", 0)
     # RT Engine
     cmds.setAttr("vraySettings.rt_engineType", 1) # 0: CPU, 1: OpenCL, 2: CUDA
+
+    Utils.maya_print("Vray now using FumeFX setup.")
