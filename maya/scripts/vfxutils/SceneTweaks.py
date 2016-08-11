@@ -200,8 +200,8 @@ def scene_tweaks_window():
 
     cmds.frameLayout(label="Vray Tweaks", mw=5, mh=5)
     cmds.rowLayout(numberOfColumns=2)
-    cmds.button(label="Default Setup")
-    cmds.button(label="Fume FX Setup")
+    cmds.button(label="Default Setup", command="SceneTweaks.vray_default_setup()")
+    cmds.button(label="Fume FX Setup", command="SceneTweaks.vray_fumefx_setup()")
     cmds.setParent("..")
     cmds.setParent("..")
 
@@ -216,3 +216,30 @@ def scene_tweaks_window():
 
     cmds.setParent("..")
     cmds.showWindow(window)
+
+def vray_default_setup():
+    presets = cmds.nodePreset(list="vraySettings")
+    if "Vray_Default" in presets:
+        cmds.nodePreset(load=("vraySettings", "Vray_Default"))
+
+def vray_fumefx_setup():
+    mel.eval("setCurrentRenderer \"vray\";")
+    # VRay Common
+    cmds.setAttr("vraySettings.imageFormatStr", "tga", type="string")
+    cmds.setAttr("vraySettings.fileNamePadding", 4)
+    cmds.setAttr("defaultRenderGlobals.modifyExtension", 1)
+    cmds.setAttr("defaultRenderGlobals.startExtension", 0)
+    cmds.setAttr("defaultRenderGlobals.byExtension", 1)
+    cmds.setAttr("vraySettings.width",  256)
+    cmds.setAttr("vraySettings.height", 256)
+    cmds.setAttr("vraySettings.aspectRatio", 1.0)
+    # VRay
+    cmds.setAttr("vraySettings.globopt_geom_displacement", 0)
+    #cmds.setAttr("vraySettings.globopt_cache_bitmaps", 1)               # (maybe make it True)
+    #cmds.setAttr("vraySettings.globopt_gi_dontRenderImage", 1)          # (maybe make it True)
+    #cmds.setAttr("vraySettings.globopt_mtl_reflectionRefraction", 0)    # (maybe make it False)
+    #cmds.setAttr("vraySettings.globopt_mtl_glossy", 0)                  # (maybe make it False)
+    cmds.setAttr("vraySettings.samplerType", 0) # Fixed rate
+    cmds.setAttr("vraySettings.aaFilterOn", 0)
+    # RT Engine
+    cmds.setAttr("vraySettings.rt_engineType", 1) # 0: CPU, 1: OpenCL, 2: CUDA
