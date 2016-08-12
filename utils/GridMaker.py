@@ -125,9 +125,9 @@ def rearrange_frames():
 
         outImage.save("y:/art/source/particles/textures/fire_AAA_5.tga")
 
-def combine_ffx_normals():
-    nm1 = Image.open("C:/Projects/ffx/images/ffx_nm_forward.combined.tga") # forward
-    nm2 = Image.open("C:/Projects/ffx/images/ffx_nm_inverted.combined.tga") # inverted
+def combine_ffx_normals(fileMaskForward, fileMaskInverted):
+    nm1 = Image.open(fileMaskForward.format("combined")) # forward
+    nm2 = Image.open(fileMaskInverted.format("combined")) # inverted
 
     r, g, b, a = nm1.split()
     nm1 = Image.merge("RGB", (r, g, b))
@@ -153,5 +153,5 @@ if __name__ == "__main__":
         #process_ffx("C:/Projects/ffx/images/ffx_d.{}.tga", (8, 4))
         #process_ffx("C:/Projects/ffx/images/ffx_nm_forward.{}.tga", (8, 4))
         #process_ffx("C:/Projects/ffx/images/ffx_nm_inverted.{}.tga", (8, 4))
-        #combine_ffx_normals()
+        #combine_ffx_normals("C:/Projects/ffx/images/ffx_nm_forward.{}.tga", "C:/Projects/ffx/images/ffx_nm_inverted.{}.tga")
         pass

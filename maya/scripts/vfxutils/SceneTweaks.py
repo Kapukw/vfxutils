@@ -264,5 +264,5 @@ def make_sprite_sheet():
 def make_nm_sprite_sheet():
     cmd  = "process_ffx('C:/Projects/ffx/images/ffx_nm_forward.{}.tga', (8, 4))\n"
     cmd += "process_ffx('C:/Projects/ffx/images/ffx_nm_inverted.{}.tga', (8, 4))\n"
-    cmd += "combine_ffx_normals()\n"
+    cmd += "combine_ffx_normals('C:/Projects/ffx/images/ffx_nm_forward.{}.tga', 'C:/Projects/ffx/images/ffx_nm_inverted.{}.tga')\n"
     subprocess.call(["C:\\Python27\\python.exe", "C:\\Projects\\vfxutils\\utils\\GridMaker.py", cmd], stdout=sys.__stdout__)
