@@ -1,6 +1,7 @@
 ﻿import os
 import sys
 import glob
+import subprocess
 import maya.cmds as cmds
 import maya.mel as mel
 
@@ -207,8 +208,8 @@ def scene_tweaks_window():
 
     cmds.frameLayout(label="Image Processing", mw=5, mh=5)
     cmds.columnLayout(adjustableColumn=True)
-    cmds.button(label="Make sprite sheet (diffuse)")
-    cmds.button(label="Make sprite sheet (normal map)")
+    cmds.button(label="Make sprite sheet (diffuse)",    command="SceneTweaks.make_sprite_sheet()")
+    cmds.button(label="Make sprite sheet (normal map)", command="SceneTweaks.make_nm_sprite_sheet()")
     cmds.setParent("..")
     cmds.setParent("..")
 
@@ -255,3 +256,13 @@ def vray_fumefx_setup():
     cmds.setAttr("vraySettings.rt_engineType", 1) # 0: CPU, 1: OpenCL, 2: CUDA
 
     Utils.maya_print("Vray now using FumeFX setup.")
+
+def make_sprite_sheet():
+    cmd = "process_ffx('C:/Projects/ffx/images/ffx_d.{}.tga', (8, 4))\n"
+    subprocess.call(["C:\\Python27\\python.exe", "C:\\Projects\\vfxutils\\utils\\GridMaker.py", cmd], stdout=sys.__stdout__)
+
+def make_nm_sprite_sheet():
+    cmd  = "process_ffx('C:/Projects/ffx/images/ffx_nm_forward.{}.tga', (8, 4))\n"
+    cmd += "process_ffx('C:/Projects/ffx/images/ffx_nm_inverted.{}.tga', (8, 4))\n"
+    cmd += "combine_ffx_normals()\n"
+    subprocess.call(["C:\\Python27\\python.exe", "C:\\Projects\\vfxutils\\utils\\GridMaker.py", cmd], stdout=sys.__stdout__)

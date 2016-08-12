@@ -1,3 +1,4 @@
+import sys
 from PIL import Image, ImageOps, ImageChops
 
 def process_ffx(fileMask, gridSize=(8, 8), smoothBorders=False):
@@ -144,8 +145,13 @@ def combine_ffx_normals():
     out.save("C:/Projects/ffx/images/ffx_nm_final.tga")
 
 if __name__ == "__main__":
-    #rearrange_frames()
-    #process_ffx("C:/Projects/ffx/images/ffx_nm_forward.{}.tga", (8, 4))
-    #process_ffx("C:/Projects/ffx/images/ffx_nm_inverted.{}.tga", (8, 4))
-    #combine_ffx_normals()
-    process_ffx("C:/Projects/ffx/images/ffx_d.{}.tga", (8, 4))
+    if len(sys.argv) > 1:
+        cmd = sys.argv[1]
+        print "{}:\n\t{}".format(__file__, cmd.replace("\n", "\n\t"))
+        exec(cmd)
+    else:
+        #process_ffx("C:/Projects/ffx/images/ffx_d.{}.tga", (8, 4))
+        #process_ffx("C:/Projects/ffx/images/ffx_nm_forward.{}.tga", (8, 4))
+        #process_ffx("C:/Projects/ffx/images/ffx_nm_inverted.{}.tga", (8, 4))
+        #combine_ffx_normals()
+        pass
