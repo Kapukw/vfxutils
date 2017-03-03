@@ -25,6 +25,7 @@
     <Folder Include="pypredef\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="addons\build_emo_design.py" />
     <Compile Include="addons\material_convert_to_parts_pbs.py" />
     <Compile Include="pypredef\aud.py" />
     <Compile Include="pypredef\bgl.py" />

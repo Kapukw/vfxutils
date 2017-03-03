@@ -20075,7 +20075,7 @@ class types(object):
                     
             '''
         
-            return types.Image
+            return types.Image()
 
         def remove(image):
             '''Remove an image from the current blendfile
