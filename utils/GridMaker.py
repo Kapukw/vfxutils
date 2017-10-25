@@ -144,12 +144,54 @@ def combine_ffx_normals(fileMaskForward, fileMaskInverted):
     out = Image.merge("RGBA", (r, g, b, a))
     out.save("C:/Projects/ffx/images/ffx_nm_final.tga")
 
+
+def generate_cloud_nm_channel(srcImg):
+
+    # channels
+    r, g, b, a = srcImg.split()
+
+    # helper images
+    gray = Image.new('L', srcImg.size, (127))
+    yellowRGB = Image.new('RGB', srcImg.size, (255, 255, 0))
+
+    # discard 'too yellow' values
+    oneMinusYellowness = ImageChops.difference(Image.merge('RGB', (r, g, b)), yellowRGB)
+    yR, yG, yB = oneMinusYellowness.split()
+    oneMinusYellowness = ImageChops.lighter(yR, yG)
+    yellowness = ImageChops.invert(oneMinusYellowness)
+    yellowness = ImageChops.lighter(yellowness, gray)
+    yellowness = ImageChops.subtract(yellowness, gray)
+    yellowness = ImageChops.add(yellowness, yellowness)
+    #yellowness.save("Y:/art/source/particles/textures/clouds/yellowness.png")
+
+    halfRed = ImageChops.multiply(r, gray) # 50% red
+    halfGreen = ImageChops.multiply(g, gray) # 50% green
+
+    # compose
+    dstImg = ImageChops.subtract(ImageChops.add(gray, halfRed), halfGreen)
+    dstImg = ImageChops.composite(gray, dstImg, yellowness)
+
+    return dstImg
+
+
+# TODO: normalize dstImg
+def generate_cloud_nm(horImg, vertImg):
+    r = generate_cloud_nm_channel(horImg)
+    g = generate_cloud_nm_channel(vertImg)
+    b = Image.new('L', horImg.size, (255))
+    dstImg = Image.merge('RGB', (r, g, b))
+    return dstImg
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         cmd = sys.argv[1]
-        print "{}:\n\t{}".format(__file__, cmd.replace("\n", "\n\t"))
+        print("{}:\n\t{}".format(__file__, cmd.replace("\n", "\n\t")))
         exec(cmd)
     else:
+        horImg = Image.open("Y:/art/source/particles/textures/clouds/hor.png")
+        vertImg = Image.open("Y:/art/source/particles/textures/clouds/vert.png")
+        dstImg = generate_cloud_nm(horImg, vertImg)
+        dstImg.save("Y:/art/source/particles/textures/clouds/cloud_nm.png")
         #process_ffx("C:/Projects/ffx/images/ffx_d.{}.tga", (8, 4))
         #process_ffx("C:/Projects/ffx/images/ffx_nm_forward.{}.tga", (8, 4))
         #process_ffx("C:/Projects/ffx/images/ffx_nm_inverted.{}.tga", (8, 4))
