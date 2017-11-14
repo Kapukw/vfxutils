@@ -1,4 +1,5 @@
 import sys
+import math
 from PIL import Image, ImageOps, ImageChops
 
 def process_ffx(fileMask, gridSize=(8, 8), smoothBorders=False):
@@ -182,16 +183,88 @@ def generate_cloud_nm(horImg, vertImg):
     dstImg = Image.merge('RGB', (r, g, b))
     return dstImg
 
+
+def blend_nm_pixel(v1, v2):
+    v = [0.0, 0.0, 1.0]
+    x1 = ( float( v1[0] ) / 255.0 ) * 2.0 - 1.0
+    x2 = ( float( v2[0] ) / 255.0 ) * 2.0 - 1.0
+    v[0] = x1 + x2
+    y1 = ( float( v1[1] ) / 255.0 ) * 2.0 - 1.0
+    y2 = ( float( v2[1] ) / 255.0 ) * 2.0 - 1.0
+    v[1] = y1 + y2
+    z1 = ( float( v1[2] ) / 255.0 ) * 2.0 - 1.0
+    z2 = ( float( v2[2] ) / 255.0 ) * 2.0 - 1.0
+    v[2] = min( z1, z2 )
+
+    vLen = math.sqrt( v[0]*v[0] + v[1]*v[1] + v[2]*v[2] )
+    if vLen > 0.0:
+        v[0] /= vLen
+        v[1] /= vLen
+        v[2] /= vLen
+    else:
+        v = [0.0, 0.0, 1.0]
+
+    p = [127, 127, 255]
+    for i in range(0, 3):
+        p[i] = int( ( v[i] * 0.5 + 0.5 ) * 255.1 )
+
+    return ( p[0], p[1], p[2] )
+
+
+def blend_normal_maps(srcImg, dstImg):
+    #srcImg = Image.open("D:/sphere_nm.png")
+    srcImg = Image.merge('RGB', srcImg.split()[0:3])
+    #dstImg = Image.open("D:/cones_nm.png")
+    dstImg = Image.merge('RGB', dstImg.split()[0:3])
+
+    outImg = Image.new('RGB', srcImg.size, (0, 0, 0))
+
+    srcPixels = srcImg.load()
+    dstPixels = dstImg.load()
+    outPixels = outImg.load()
+
+    for i in range(0, outImg.size[0]):
+        for j in range(0, outImg.size[1]):
+            p1 = srcPixels[i, j]
+            p2 = dstPixels[i, j]
+            outPixels[i, j] = blend_nm_pixel(p1, p2)
+
+    #outImg.save("D:/out_nm.png")
+    return outImg
+
+
+def make_grid_frames():
+    frame = Image.open("D:/StaticWater_Rend_NM/0001.png")
+    flat = Image.new('RGBA', frame.size, (127, 127, 255, 255))
+
+    alphaPow = 1.5
+    frameCount = 64
+    altFrameCount = 32
+
+    for i in range(1, frameCount + 1):
+        frame = Image.open("D:/StaticWater_Rend_NM/{}.png".format(str(i).zfill(4)))
+        if i <= altFrameCount:
+            alpha = float(i) / float(altFrameCount)
+            altFrame = Image.open("D:/StaticWater_Rend_NM/{}.png".format(str(frameCount + i).zfill(4)))
+            altFrame = ImageChops.blend(altFrame, flat, math.pow(alpha, alphaPow))
+            frame = ImageChops.blend(flat, frame, math.pow(alpha, 1.0 / alphaPow))
+            frame = blend_normal_maps(frame, altFrame)
+        frame = Image.merge('RGB', frame.split()[0:3])
+        frame.save("D:/StaticWater_Fade/{}.png".format(str(i).zfill(4)))
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         cmd = sys.argv[1]
         print("{}:\n\t{}".format(__file__, cmd.replace("\n", "\n\t")))
         exec(cmd)
     else:
-        horImg = Image.open("Y:/art/source/particles/textures/clouds/hor.png")
-        vertImg = Image.open("Y:/art/source/particles/textures/clouds/vert.png")
-        dstImg = generate_cloud_nm(horImg, vertImg)
-        dstImg.save("Y:/art/source/particles/textures/clouds/cloud_nm.png")
+        #blend_normal_maps()
+        make_grid_frames()
+        #horImg = Image.open("Y:/art/source/particles/textures/clouds/hor.png")
+        #vertImg = Image.open("Y:/art/source/particles/textures/clouds/vert.png")
+        #dstImg = generate_cloud_nm(horImg, vertImg)
+        #dstImg.save("Y:/art/source/particles/textures/clouds/cloud_nm.png")
         #process_ffx("C:/Projects/ffx/images/ffx_d.{}.tga", (8, 4))
         #process_ffx("C:/Projects/ffx/images/ffx_nm_forward.{}.tga", (8, 4))
         #process_ffx("C:/Projects/ffx/images/ffx_nm_inverted.{}.tga", (8, 4))
