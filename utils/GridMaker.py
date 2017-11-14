@@ -196,6 +196,9 @@ def blend_nm_pixel(v1, v2):
     z2 = ( float( v2[2] ) / 255.0 ) * 2.0 - 1.0
     v[2] = min( z1, z2 )
 
+    if v[2] < 0.0:
+        v = [0.0, 0.0, 1.0]
+
     vLen = math.sqrt( v[0]*v[0] + v[1]*v[1] + v[2]*v[2] )
     if vLen > 0.0:
         v[0] /= vLen
@@ -212,9 +215,7 @@ def blend_nm_pixel(v1, v2):
 
 
 def blend_normal_maps(srcImg, dstImg):
-    #srcImg = Image.open("D:/sphere_nm.png")
     srcImg = Image.merge('RGB', srcImg.split()[0:3])
-    #dstImg = Image.open("D:/cones_nm.png")
     dstImg = Image.merge('RGB', dstImg.split()[0:3])
 
     outImg = Image.new('RGB', srcImg.size, (0, 0, 0))
@@ -229,28 +230,48 @@ def blend_normal_maps(srcImg, dstImg):
             p2 = dstPixels[i, j]
             outPixels[i, j] = blend_nm_pixel(p1, p2)
 
-    #outImg.save("D:/out_nm.png")
     return outImg
 
 
+def crossfade_spline(x):
+    y = math.sin(x * math.pi / 2.0)
+    return y
+
+
 def make_grid_frames():
-    frame = Image.open("D:/StaticWater_Rend_NM/0001.png")
+    frame = Image.open("D:/Projects/StaticWater_Rend_NM/0001.png")
     flat = Image.new('RGBA', frame.size, (127, 127, 255, 255))
 
-    alphaPow = 1.5
     frameCount = 64
     altFrameCount = 32
 
     for i in range(1, frameCount + 1):
-        frame = Image.open("D:/StaticWater_Rend_NM/{}.png".format(str(i).zfill(4)))
+        frame = Image.open("D:/Projects/StaticWater_Rend_NM/{}.png".format(str(i).zfill(4)))
         if i <= altFrameCount:
             alpha = float(i) / float(altFrameCount)
-            altFrame = Image.open("D:/StaticWater_Rend_NM/{}.png".format(str(frameCount + i).zfill(4)))
-            altFrame = ImageChops.blend(altFrame, flat, math.pow(alpha, alphaPow))
-            frame = ImageChops.blend(flat, frame, math.pow(alpha, 1.0 / alphaPow))
+            altFrame = Image.open("D:/Projects/StaticWater_Rend_NM/{}.png".format(str(frameCount + i).zfill(4)))
+            altFrame = ImageChops.blend(flat, altFrame, crossfade_spline(1.0 - alpha))
+            frame = ImageChops.blend(flat, frame, crossfade_spline(alpha))
             frame = blend_normal_maps(frame, altFrame)
-        frame = Image.merge('RGB', frame.split()[0:3])
-        frame.save("D:/StaticWater_Fade/{}.png".format(str(i).zfill(4)))
+        #frame = Image.merge('RGB', frame.split()[0:3])
+        frame = blend_normal_maps(frame, flat)
+        frame.save("D:/Projects/StaticWater_Fade2/{}.png".format(str(i).zfill(4)))
+
+
+def make_grid():
+
+    frame = Image.open("D:/Projects/StaticWater_Fade2/0001.png")
+    outImg = Image.new('RGB', (8 * frame.size[0], 8 * frame.size[1]))
+
+    frameNum = 1
+    for j in range(0, 8):
+        for i in range(0, 8):
+            frame = Image.open("D:/Projects/StaticWater_Fade2/{}.png".format(str(frameNum).zfill(4)))
+            location = (i * frame.size[0], j * frame.size[1])
+            outImg.paste(frame, location)
+            frameNum += 1
+
+    outImg.save("y:/art/source/particles/textures/grid2.png")
 
 
 if __name__ == "__main__":
@@ -259,8 +280,8 @@ if __name__ == "__main__":
         print("{}:\n\t{}".format(__file__, cmd.replace("\n", "\n\t")))
         exec(cmd)
     else:
-        #blend_normal_maps()
         make_grid_frames()
+        make_grid()
         #horImg = Image.open("Y:/art/source/particles/textures/clouds/hor.png")
         #vertImg = Image.open("Y:/art/source/particles/textures/clouds/vert.png")
         #dstImg = generate_cloud_nm(horImg, vertImg)
